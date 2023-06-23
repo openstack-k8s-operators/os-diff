@@ -1,0 +1,82 @@
+---
+- block:
+  - name: Set fact for service name
+    set_fact:
+      service_name: "{{ service.key }}"
+
+  - name: Get container id {{ service_name }}
+    become: yes
+    register: results
+    shell: |
+      podman ps | grep Up | awk '/{{ service.value.podman_name }}$/  {print $1}'
+    when: service.value.strict_pod_name_match
+
+  - name: Set fact for container id {{ service_name }}
+    set_fact:
+      container_id: "{{ results.stdout_lines[0] }}"
+    when:
+      - service.value.strict_pod_name_match
+      - results.stdout_lines
+
+  - name: Get container id {{ service_name }}
+    become: yes
+    register: results
+    shell: |
+      podman ps | grep Up | awk '/{{ service.value.podman_name }}/  {print $1}'
+    when: not service.value.strict_pod_name_match
+
+  - name: Set fact for container id {{ service_name }}
+    set_fact:
+      container_id: "{{ results.stdout_lines[0] }}"
+    when:
+      - not service.value.strict_pod_name_match
+      - results.stdout_lines
+
+  - name: Fail if no {{ service_name }} container exists
+    fail:
+      msg: "No container for {{ service_name }} found."
+    when: not container_id
+
+  - name: Set fact for {{ service_name }} path
+    set_fact:
+      config_path: "{{ service.value.path }}"
+
+  - name: Set fact for {{ service_name }} config file path for pulling files by files
+    set_fact:
+      config_file_path: "{{ service.value.file_name | default([]) }}"
+
+  - name: Create {{ service_name }} directory
+    become: true
+    file:
+      path: "{{ working_dir }}/{{ tripleo_collect_dir }}/{{ service_name }}/{{ config_path_item | regex_replace('/$','') | dirname }}"
+      state: directory
+      mode: "0755"
+      owner: "{{ ansible_user_id }}"
+      group: "{{ ansible_user_id }}"
+      recurse: true
+    loop: "{{ config_path }}"
+    loop_control:
+      loop_var: config_path_item
+
+  - name: Pull configuration files from podman container {{ service_name }} - per items
+    ignore_errors: yes
+    command: podman cp {{ container_id }}:{{ config_file_path_item }} {{ working_dir }}/{{ tripleo_collect_dir }}/{{ service_name }}/{{ config_file_path_item }}
+    become: yes
+    when: pull_items
+    loop: "{{ config_file_path }}"
+    loop_control:
+      loop_var: config_file_path_item
+
+  - name: Pull configuration files from podman container {{ service_name }} - all
+    ignore_errors: yes
+    command: podman cp {{ container_id }}:{{ config_path_item }} {{ working_dir }}/{{ tripleo_collect_dir }}/{{ service_name }}/{{ config_path_item | regex_replace('/$','') | dirname }}
+    become: yes
+    when: not pull_items
+    loop: "{{ config_path }}"
+    loop_control:
+      loop_var: config_path_item
+  rescue:
+    - name: Fail to pull config for {{ service_name }}
+      debug:
+        msg: "Fail to pull {{ service_name }} config..."
+  when: service.value.enable

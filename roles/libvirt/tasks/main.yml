@@ -1,0 +1,63 @@
+---
+# @todo:
+# You need a $IMG of CentOS or Rhel 9 in the user $HOME
+# An ssh key in .ssh/
+- name: Get centos9
+  shell: |
+    curl {{ image_url }} --output {{ image_path }}/{{ cloud_image_name }}
+
+- name: ssh keygen
+  ignore_errors: true
+  shell: |
+    ssh-keygen -f /home/stack/.ssh/id_rsa -q -N ""
+
+- name: Push ssh key inside the image
+  shell: |
+    virt-sysprep -a {{ image_path }}/{{ cloud_image_name }} \
+    --ssh-inject root:file:{{ ssh_key_path }} --selinux-relabel
+
+- name: Set standalone disk
+  shell: |
+    cp /var/lib/libvirt/images/{{ cloud_image_name }} /var/lib/libvirt/images/standalone-0-disk1.qcow2
+    qemu-img create -b /var/lib/libvirt/images/{{ cloud_image_name }} -F qcow2 \
+    -f qcow2 /var/lib/libvirt/images/standalone-0-disk1.qcow2 40G
+
+- name: Push file
+  copy:
+    src: "{{ item }}"
+    dest: "{{ user_home }}"
+  loop: "{{ libvirt_files }}"
+
+- name: Create management network
+  become: true
+  ignore_errors: true
+  shell: |
+    virsh net-define /home/stack/management.xml
+    virsh net-autostart management
+    virsh net-start management
+
+- name: Create external network
+  ignore_errors: true
+  become: true
+  shell: |
+    virsh net-define /home/stack/external.xml
+    virsh net-autostart external
+    virsh net-start external
+
+- name: Create standalone network
+  ignore_errors: true
+  become: true
+  shell: |
+    virsh net-define /home/stack/standalone-net.xml
+    virsh net-autostart standalone
+    virsh net-start standalone
+
+- name: Create Standalone Vms
+  ignore_errors: true
+  become: true
+  shell: |
+     virt-install --name standalone --memory 8192 --vcpus 8 \
+     --graphics none   --os-variant detect=on   --import --os-variant=centos-stream9  \
+     --disk /var/lib/libvirt/images/standalone-0-disk1.qcow2,size=20  \
+     --graphics none   --console pty,target_type=virtio   --serial pty  \
+     --network network=management --noautoconsole
