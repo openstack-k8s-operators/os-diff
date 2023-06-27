@@ -1,0 +1,33 @@
+parameter_defaults:
+  CloudName: {{ standalone_ip }}
+  # default gateway
+  ControlPlaneStaticRoutes:
+    - ip_netmask: 0.0.0.0/0
+      next_hop: {{ standalone_gateway }}
+      default: true
+  Debug: true
+  DeploymentUser: {{ standalone_user }}
+  DnsServers:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 10.11.5.160
+    - 10.2.70.215
+  # needed for vip & pacemaker
+  KernelIpNonLocalBind: 1
+  DockerInsecureRegistryAddress:
+    - {{ standalone_ip }}:8787
+  NeutronPublicInterface: {{ standalone_interface }}
+  # domain name used by the host
+  CloudDomain: localdomain
+  NeutronDnsDomain: localdomain
+  # re-use ctlplane bridge for public net, defined in the standalone
+  # net config (do not change unless you know what you're doing)
+  NeutronBridgeMappings: datacentre:br-ctlplane
+  NeutronPhysicalBridge: br-ctlplane
+  # enable to force metadata for public net
+  #NeutronEnableForceMetadata: true
+  StandaloneEnableRoutedNetworks: false
+  StandaloneHomeDir: {{ standalone_home_dir }}
+  InterfaceLocalMtu: 1500
+  # Needed if running in a VM, not needed if on baremetal
+  NovaComputeLibvirtType: qemu

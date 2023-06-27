@@ -1,0 +1,6 @@
+---
+- name: Standalone deployment
+  hosts: standalone
+  gather_facts: no
+  roles:
+    - tripleo_standalone

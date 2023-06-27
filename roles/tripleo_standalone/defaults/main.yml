@@ -1,0 +1,12 @@
+---
+prep: true
+deploy: true
+# /!\ override those values
+standalone_ip: 172.16.0.74
+standalone_vip: 192.168.25.2
+standalone_netmask: 24
+standalone_gateway: 172.16.0.1
+standalone_interface: eth1
+
+standalone_user: stack
+standalone_home_dir: /home/stack

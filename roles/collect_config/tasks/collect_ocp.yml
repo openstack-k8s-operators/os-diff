@@ -1,0 +1,66 @@
+---
+- block:
+  - name: Get pods id
+    register: results
+    shell: |
+      {{ oc_bin }} get pods --field-selector status.phase=Running | awk '/{{ service.value.pod_name }}-[a-f0-9-]/ {print $1}'
+
+  - name: Set fact for pod id
+    set_fact:
+      pod_id: "{{ results.stdout_lines[0] }}"
+    when:
+      - results.stdout_lines | default(False)
+      - not service.value.strict_pod_name_match
+
+  - name: Get pods id
+    register: results_strict_match
+    shell: |
+      {{ oc_bin }} get pods --field-selector status.phase=Running | awk '/{{ service.value.pod_name }}/ {print $1}'
+    when: service.value.strict_pod_name_match
+
+  - name: Set fact for pod id
+    set_fact:
+      pod_id: "{{ results_strict_match.stdout_lines[0] }}"
+    when:
+      - results_strict_match.stdout_lines | default(False)
+      - service.value.strict_pod_name_match
+
+  - name: Set fact for service name
+    set_fact:
+      service_name: "{{ service.key }}"
+
+  - name: Fail if no {{ service_name }} container exists
+    fail:
+      msg: "No container for {{ service_name }} found."
+    when: not pod_id
+
+  - name: Set fact for {{ service_name }} path
+    set_fact:
+      config_path: "{{ service.value.path }}"
+
+  - name: Create {{ service_name}} directory
+    become: true
+    file:
+      path: "{{ working_dir }}/{{ crc_collect_dir }}/{{ service_name }}/{{ config_path_item | regex_replace('/$','') | dirname }}"
+      state: directory
+      mode: "0755"
+      owner: "{{ ansible_user_id }}"
+      group: "{{ ansible_user_id }}"
+      recurse: true
+    loop: "{{ config_path }}"
+    loop_control:
+      loop_var: config_path_item
+
+  - name: Pull configuration files from {{ service_name }} pod
+    ignore_errors: yes
+    register: config_results
+    shell: |
+      {{ oc_bin }} cp {{ pod_id }}:{{ config_path_item }} {{ working_dir }}/{{ crc_collect_dir }}/{{ service_name }}/{{ config_path_item }}/
+    loop: "{{ config_path }}"
+    loop_control:
+      loop_var: config_path_item
+  rescue:
+    - name: Fail to pull config for {{ service.key }}
+      debug:
+        msg: "Fail to pull {{ service.key }} config..."
+  when: service.value.enable
