@@ -1,8 +1,0 @@
----
-- name: Prepare environment
-  include_tasks: prep.yml
-  when: prep
-
-- name: Deploy Standalone
-  include_tasks: deploy.yml
-  when: deploy
