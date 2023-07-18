@@ -8,7 +8,9 @@
 
 - name: OC login
   include_tasks: ocp_login.yml
-  when: collect_ocp
+  when:
+    - collect_ocp
+    - oc_login
 
 - name: Collect ocp
   include_tasks: collect_ocp.yml

@@ -22,6 +22,9 @@ collect_ocp: false
 oc_host: https://api.crc.testing:6443
 oc_login: kubeadmin
 oc_passwd: 12345678
+# Move this to true if you want to log to OCP with login/password
+# Keep this to false if you are already logged in or you want to do it on our own.
+oc_login: false
 # If you are not using a crc environment set this to false.
 crc: true
 
