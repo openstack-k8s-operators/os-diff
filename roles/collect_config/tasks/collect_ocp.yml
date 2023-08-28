@@ -39,7 +39,6 @@
       config_path: "{{ service.value.path }}"
 
   - name: Create {{ service_name}} directory
-    become: true
     file:
       path: "{{ working_dir }}/{{ crc_collect_dir }}/{{ service_name }}/{{ config_path_item | regex_replace('/$','') | dirname }}"
       state: directory
