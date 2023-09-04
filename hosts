@@ -1,6 +1,6 @@
 ocp:
   hosts:
-    crc:
+    localhost:
       ansible_connection: local
 
 undercloud:
