@@ -37,9 +37,10 @@ func GetConfigFromPod(serviceConfigPath string, podname string) ([]byte, error) 
 
 	if TestOCConnection() {
 		cmd := exec.Command("oc", "exec", podname, "--", "cat", serviceConfigPath)
-		out, err := cmd.Output()
+		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return nil, err
+			fmt.Println(string(out))
+			return out, err
 		}
 		return []byte(out), nil
 
@@ -53,7 +54,7 @@ func GenerateOpenshiftConfig(outputConfigPath string, serviceConfigPath string) 
 }
 
 func TestOCConnection() bool {
-	cmd := exec.Command("oc", "whoiam")
+	cmd := exec.Command("oc", "whoami")
 	out, err := cmd.Output()
 	if err != nil {
 		return false

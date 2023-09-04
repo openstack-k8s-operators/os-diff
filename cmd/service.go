@@ -57,9 +57,7 @@ func init() {
 	serviceCmd.Flags().StringVarP(&ocp, "ocp", "o", "", "Openshift config spec file path.")
 	serviceCmd.Flags().StringVarP(&config, "config", "c", "", "Openstack service config file path.")
 	serviceCmd.Flags().StringVarP(&service, "service", "s", "", "Openstack service, could be one of: Cinder, Glance...")
-	compareCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
-	compareCmd.Flags().StringVarP(&podname, "podname", "p", "", "Name of the pod of the service: cinder-api.")
-	// serviceFlag := diffCmd.Flags().String("type", "", "File type: ini, raw, json, yaml")
-	// serviceFlag.ValidArgs = []string{"ini", "raw", "json", "yaml"}
+	serviceCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
+	serviceCmd.Flags().StringVarP(&podname, "podname", "p", "", "Name of the pod of the service: cinder-api.")
 	rootCmd.AddCommand(serviceCmd)
 }
