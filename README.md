@@ -169,7 +169,65 @@ Source file path: /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf, 
 -max_active_keys=5
 ```
 
+### Openshift Pod config comparison
 
+When you prepare the adoption of your TripleO cloud to your Openshift cluster, you might want to compare and verify if the config describe in your Openshift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the Openshift config, the service is correctly configured.
+
+The service command allow you to compare Yaml Openshift config patch with Openstack Ini configuration file from your services.
+You can also query Openshift pods to check if the configuration are well set.
+
+Example:
+
+```
+spec:
+  glance:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      containerImage: foo
+      customServiceConfig: |
+        [DEFAULT]
+        enabled_backends=default_backend:rbd
+        [glance_store]
+        default_backend=default_backend
+        [default_backend]
+        rbd_store_ceph_conf=/etc/ceph/ceph.conf
+        rbd_store_user=openstack
+        rbd_store_pool=images
+        store_description=Ceph glance store backend.
+...
+```
+
+Run service command:
+
+```service
+./os-diff service -s glance -o examples/glance/glance.patch -c /tmp/glance.conf
+Source file path: examples/glance/glance.patch, difference with: /tmp/glance.conf
+-enabled_backends=default_backend:rbd
+-[glance_store]
+-default_backend=default_backend
+-[default_backend]
+-rbd_store_ceph_conf=/etc/ceph/ceph.conf
+-rbd_store_user=openstack
+-rbd_store_pool=images
+-store_description=Ceph glance store backend.
+```
+
+Run comparison against the deployed pod:
+
+```service
+service -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf --frompod -p glance-external-api-678c6c79d7-24t7t
+Source file path: examples/glance/glance.patch, difference with: /etc/glance/glance-api.conf
+[DEFAULT]
+-enabled_backends=default_backend:rbd
+[glance_store]
+-default_backend=default_backend
+-[default_backend]
+-rbd_store_ceph_conf=/etc/ceph/ceph.conf
+-rbd_store_user=openstack
+-rbd_store_pool=images
+-store_description=Ceph glance store backend.
+```
 
 ### Asciinema demo
 
