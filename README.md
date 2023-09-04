@@ -216,7 +216,9 @@ Source file path: examples/glance/glance.patch, difference with: /tmp/glance.con
 Run comparison against the deployed pod:
 
 ```service
-service -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf --frompod -p glance-external-api-678c6c79d7-24t7t
+./os-diff service -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf \
+--frompod -p glance-external-api-678c6c79d7-24t7t
+
 Source file path: examples/glance/glance.patch, difference with: /etc/glance/glance-api.conf
 [DEFAULT]
 -enabled_backends=default_backend:rbd
