@@ -56,11 +56,10 @@ func GenerateOpenshiftConfig(outputConfigPath string, serviceConfigPath string) 
 
 func TestOCConnection() bool {
 	cmd := exec.Command("oc", "whoami")
-	out, err := cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		return false
 	}
-	fmt.Println("Output: ", string(out))
 	return true
 }
 
@@ -72,8 +71,8 @@ func LoadServiceConfig(file string) ([]byte, error) {
 	return serviceConfig, nil
 }
 
-func cleanIniSections(configString string) string {
-	lines := strings.Split(configString, "\n")
+func cleanIniSections(config string) string {
+	lines := strings.Split(config, "\n")
 	sectionMap := make(map[string][]string)
 	currentSection := ""
 

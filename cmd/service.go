@@ -34,7 +34,7 @@ var serviceCmd = &cobra.Command{
 	Short: "Print diff between an Openshift Config spec and an Openstack service config file",
 	Long: `Print diff from an Openshit config spec file and an Openstack sercice config file.
 		   For example:
-           ./os-diff service --service cinder --ocp cinder.patch --serviceconfig cinder.conf
+           ./os-diff service --service cinder --ocp examples/cinder/cinder.patch --serviceconfig examples/cinder/cinder.conf
 		   or
 		   ./os-diff service --service cinder --ocp cinder.patch --serviceconfig /etc/cinder.conf --frompod --podname cinder-api`,
 	Run: func(cmd *cobra.Command, args []string) {
