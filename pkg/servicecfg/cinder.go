@@ -89,7 +89,7 @@ func LoadCinderOpenshiftConfig(configPath string) string {
 		sb.WriteString(cinder.Spec.Cinder.Template.CustomServiceConfig)
 	}
 
-	return sb.String()
+	return cleanIniSections(sb.String())
 }
 
 func DiffCinderConfig(ocpConfig string, serviceConfig string) error {

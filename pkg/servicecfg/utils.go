@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os-diff/pkg/godiff"
 	"os/exec"
+	"strings"
 )
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
@@ -69,4 +70,38 @@ func LoadServiceConfig(file string) ([]byte, error) {
 		panic(err)
 	}
 	return serviceConfig, nil
+}
+
+func cleanIniSections(configString string) string {
+	lines := strings.Split(configString, "\n")
+	sectionMap := make(map[string][]string)
+	currentSection := ""
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		// Check if line is a section header
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			currentSection = strings.TrimPrefix(strings.TrimSuffix(line, "]"), "[")
+			continue
+		}
+		// Skip empty lines or lines without '='
+		if line == "" || !strings.Contains(line, "=") {
+			continue
+		}
+		// Append key-value pairs to section map
+		if currentSection != "" {
+			sectionMap[currentSection] = append(sectionMap[currentSection], line)
+		}
+	}
+	var sb strings.Builder
+	// Build updated INI string
+	for section, lines := range sectionMap {
+		sb.WriteString(fmt.Sprintf("[%s]\n", section))
+		for _, line := range lines {
+			sb.WriteString(fmt.Sprintf("%s\n", line))
+		}
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
 }

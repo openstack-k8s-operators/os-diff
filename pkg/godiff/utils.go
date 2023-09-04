@@ -188,12 +188,10 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 				diffFound = true
 				log.Warn("Difference detected. Section: ", sec1.Name(), " not found in:", dest)
 				report = append(report, msg)
-				break
 			}
 		}
 		for _, key1 := range sec1.Keys() {
-			key2, err := sec2.GetKey(key1.Name())
-			if err != nil {
+			if sec2 == nil {
 				if !sectionFound {
 					sectionFound = true
 					msg = fmt.Sprintf("[%s]\n-%s=%s\n", sec1.Name(), key1.Name(), key1.Value())
@@ -206,7 +204,21 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 					report = append(report, msg)
 				}
 			} else {
-				if key1.Value() != key2.Value() {
+				key2, err := sec2.GetKey(key1.Name())
+				if err != nil {
+					// key2 not found
+					if !sectionFound {
+						sectionFound = true
+						msg = fmt.Sprintf("[%s]\n-%s=%s\n", sec1.Name(), key1.Name(), key1.Value())
+					} else {
+						msg = fmt.Sprintf("-%s=%s\n", key1.Name(), key1.Value())
+					}
+					if !stringInSlice(msg, report) {
+						diffFound = true
+						log.Warn("Difference detected. Section: ", sec1.Name(), " Key ", key1.Name(), " not found in:", dest)
+						report = append(report, msg)
+					}
+				} else if key1.Value() != key2.Value() {
 					if !sectionFound {
 						sectionFound = true
 						msg = fmt.Sprintf(
@@ -231,19 +243,21 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 			}
 		}
 		// Look for missing keys in Origin:
-		for _, key2 := range sec2.Keys() {
-			_, err := sec1.GetKey(key2.Name())
-			if err != nil {
-				if !sectionFound {
-					sectionFound = true
-					msg = fmt.Sprintf("[%s]\n-%s=%s\n", sec2.Name(), key2.Name(), key2.Value())
-				} else {
-					msg = fmt.Sprintf("-%s=%s\n", key2.Name(), key2.Value())
-				}
-				if !stringInSlice(msg, report) {
-					diffFound = true
-					log.Warn("Difference detected -- Section: ", sec2.Name(), " Key ", key2.Name(), " not found in:", dest)
-					report = append(report, msg)
+		if sec2 != nil {
+			for _, key2 := range sec2.Keys() {
+				_, err := sec1.GetKey(key2.Name())
+				if err != nil {
+					if !sectionFound {
+						sectionFound = true
+						msg = fmt.Sprintf("[%s]\n-%s=%s\n", sec2.Name(), key2.Name(), key2.Value())
+					} else {
+						msg = fmt.Sprintf("-%s=%s\n", key2.Name(), key2.Value())
+					}
+					if !stringInSlice(msg, report) {
+						diffFound = true
+						log.Warn("Difference detected -- Section: ", sec2.Name(), " Key ", key2.Name(), " not found in:", dest)
+						report = append(report, msg)
+					}
 				}
 			}
 		}
