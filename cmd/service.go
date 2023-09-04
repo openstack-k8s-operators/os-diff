@@ -28,6 +28,7 @@ var ocp string
 var config string
 var frompod bool
 var podname string
+var sidebyside bool
 
 var serviceCmd = &cobra.Command{
 	Use:   "service",
@@ -45,7 +46,16 @@ var serviceCmd = &cobra.Command{
 				}
 				servicecfg.DiffCinderConfigFromPod(ocp, config, podname)
 			} else {
-				servicecfg.DiffCinderConfig(ocp, config)
+				servicecfg.DiffCinderConfig(ocp, config, sidebyside)
+			}
+		} else if service == "glance" {
+			if frompod {
+				if podname == "" {
+					panic("Please provide a pod name with --frompod option.")
+				}
+				servicecfg.DiffGlanceConfigFromPod(ocp, config, podname)
+			} else {
+				servicecfg.DiffGlanceConfig(ocp, config, sidebyside)
 			}
 		} else {
 			panic("Unknown service...")
@@ -58,6 +68,7 @@ func init() {
 	serviceCmd.Flags().StringVarP(&config, "config", "c", "", "Openstack service config file path.")
 	serviceCmd.Flags().StringVarP(&service, "service", "s", "", "Openstack service, could be one of: Cinder, Glance...")
 	serviceCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
+	serviceCmd.Flags().BoolVar(&sidebyside, "sidebyside", false, "Compare both: source->dest and dest->source.")
 	serviceCmd.Flags().StringVarP(&podname, "podname", "p", "", "Name of the pod of the service: cinder-api.")
 	rootCmd.AddCommand(serviceCmd)
 }

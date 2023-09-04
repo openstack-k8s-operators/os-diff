@@ -1,0 +1,115 @@
+Source file path: examples/glance/glance.patch, difference with: /tmp/glance.conf
+@@ line: 0
++spec:
+@@ line: 1
++  glance:
+@@ line: 2
++    enabled: true
+@@ line: 3
++    template:
+@@ line: 4
++      databaseInstance: openstack
+@@ line: 5
++      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+@@ line: 6
++      customServiceConfig: |
+@@ line: 7
++        [DEFAULT]
+@@ line: 8
++        enabled_backends=default_backend:rbd
+@@ line: 9
++        [glance_store]
+@@ line: 10
++        default_backend=default_backend
+@@ line: 11
++        [default_backend]
+@@ line: 12
++        rbd_store_ceph_conf=/etc/ceph/ceph.conf
+@@ line: 13
++        rbd_store_user=openstack
+@@ line: 14
++        rbd_store_pool=images
+@@ line: 15
++        store_description=Ceph glance store backend.
+@@ line: 16
++      storageClass: "local-storage"
+@@ line: 17
++      storageRequest: 10G
+@@ line: 18
++      glanceAPIInternal:
+@@ line: 19
++        externalEndpoints:
+@@ line: 20
++        - endpoint: internal
+@@ line: 21
++          ipAddressPool: internalapi
+@@ line: 22
++          loadBalancerIPs:
+@@ line: 23
++          - 172.17.0.80
+@@ line: 24
++        networkAttachments:
+@@ line: 25
++        - storage
+@@ line: 26
++      glanceAPIExternal:
+@@ line: 27
++        networkAttachments:
+@@ line: 28
++        - storage
+@@ line: 29
++  extraMounts:
+@@ line: 30
++    - extraVol:
+@@ line: 31
++      - propagation:
+@@ line: 32
++        - Glance
+@@ line: 33
++        extraVolType: Ceph
+@@ line: 34
++        volumes:
+@@ line: 35
++        - name: ceph
+@@ line: 36
++          projected:
+@@ line: 37
++            sources:
+@@ line: 38
++            - secret:
+@@ line: 39
++                name: ceph-conf-files
+@@ line: 40
++        mounts:
+@@ line: 41
++        - name: ceph
+@@ line: 42
++          mountPath: "/etc/ceph"
+@@ line: 43
++          readOnly: true
+@@ line: 140
+-[oslo_messaging_kafka]
+@@ line: 224
+-[oslo_messaging_notifications]
+@@ line: 251
+-[oslo_messaging_rabbit]
+@@ line: 412
+-[oslo_middleware]
+@@ line: 423
+-[oslo_policy]
+@@ line: 483
+-[oslo_reports]
+@@ line: 503
+-[paste_deploy]
+@@ line: 571
+-[profiler]
+@@ line: 684
+-[store_type_location_strategy]
+@@ line: 721
+-[task]
+@@ line: 788
+-[taskflow_executor]
+@@ line: 879
+-[vault]
+@@ line: 915
+-[wsgi]

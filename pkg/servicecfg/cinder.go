@@ -92,7 +92,7 @@ func LoadCinderOpenshiftConfig(configPath string) string {
 	return cleanIniSections(sb.String())
 }
 
-func DiffCinderConfig(ocpConfig string, serviceConfig string) error {
+func DiffCinderConfig(ocpConfig string, serviceConfig string, sidebyside bool) error {
 	// Get ocpConfig
 	cinderPatch := LoadCinderOpenshiftConfig(ocpConfig)
 	// Get service Config
@@ -104,6 +104,12 @@ func DiffCinderConfig(ocpConfig string, serviceConfig string) error {
 	_, err = CompareIniConfig([]byte(cinderPatch), cinderConfig, ocpConfig, serviceConfig)
 	if err != nil {
 		panic(err)
+	}
+	if sidebyside {
+		_, err = CompareIniConfig(cinderConfig, []byte(cinderPatch), serviceConfig, ocpConfig)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return nil
 }
