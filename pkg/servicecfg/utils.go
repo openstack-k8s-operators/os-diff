@@ -50,6 +50,17 @@ func GetConfigFromPod(serviceConfigPath string, podname string) ([]byte, error) 
 	}
 }
 
+func GetConfigFromPodman(serviceConfigPath string, podmanName string) ([]byte, error) {
+
+	cmd := exec.Command("ssh", "-F", "ssh.config", "standalone", "podman", "exec", podmanName, "cat ", serviceConfigPath)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(out))
+		return out, err
+	}
+	return []byte(out), nil
+}
+
 func GenerateOpenshiftConfig(outputConfigPath string, serviceConfigPath string) error {
 	return nil
 }

@@ -27,6 +27,7 @@ var service string
 var ocp string
 var config string
 var frompod bool
+var frompodman bool
 var podname string
 var sidebyside bool
 
@@ -39,26 +40,18 @@ var serviceCmd = &cobra.Command{
 		   or
 		   ./os-diff service --service cinder --ocp cinder.patch --serviceconfig /etc/cinder.conf --frompod --podname cinder-api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if service == "cinder" {
-			if frompod {
-				if podname == "" {
-					panic("Please provide a pod name with --frompod option.")
-				}
-				servicecfg.DiffCinderConfigFromPod(ocp, config, podname)
-			} else {
-				servicecfg.DiffCinderConfig(ocp, config, sidebyside)
+		if frompod {
+			if podname == "" {
+				panic("Please provide a pod name with --frompod option.")
 			}
-		} else if service == "glance" {
-			if frompod {
-				if podname == "" {
-					panic("Please provide a pod name with --frompod option.")
-				}
-				servicecfg.DiffGlanceConfigFromPod(ocp, config, podname)
-			} else {
-				servicecfg.DiffGlanceConfig(ocp, config, sidebyside)
+			servicecfg.DiffServiceConfigFromPod(service, ocp, config, podname)
+		} else if frompodman {
+			if podname == "" {
+				panic("Please provide a pod name with --frompodman option.")
 			}
+			servicecfg.DiffServiceConfigFromPodman(service, ocp, config, podname)
 		} else {
-			panic("Unknown service...")
+			servicecfg.DiffServiceConfig(service, ocp, config, sidebyside)
 		}
 	},
 }
@@ -68,6 +61,7 @@ func init() {
 	serviceCmd.Flags().StringVarP(&config, "config", "c", "", "Openstack service config file path.")
 	serviceCmd.Flags().StringVarP(&service, "service", "s", "", "Openstack service, could be one of: Cinder, Glance...")
 	serviceCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
+	serviceCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from Openstack podman container.")
 	serviceCmd.Flags().BoolVar(&sidebyside, "sidebyside", false, "Compare both: source->dest and dest->source.")
 	serviceCmd.Flags().StringVarP(&podname, "podname", "p", "", "Name of the pod of the service: cinder-api.")
 	rootCmd.AddCommand(serviceCmd)
