@@ -54,7 +54,10 @@ func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig st
 	} else if service == "glance" {
 		servicePatch = LoadGlanceOpenshiftConfig(ocpConfig)
 	} else {
-		panic("Service not supported, please implement it.")
+		msg := `Service not supported, please implement it.
+			Follow the instructions to add new Openstack services here:
+			https://github.com/openstack-k8s-operators/os-diff#add-service`
+		panic(msg)
 	}
 	// Get service Config
 	podConfig, err := GetConfigFromPod(serviceConfig, podname)

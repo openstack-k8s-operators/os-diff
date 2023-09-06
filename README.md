@@ -231,13 +231,63 @@ Source file path: examples/glance/glance.patch, difference with: /etc/glance/gla
 -store_description=Ceph glance store backend.
 ```
 
+### Add service
+
+If you want to add a new Openstack service to this tool follow those instructions:
+
+* Convert your Openshift configmap to a GO struct with:
+https://zhwt.github.io/yaml-to-go/
+* Create a <service-name>.go file into pkg/servicecfg/
+* Paste your generated structure and the following code:
+```
+package servicecfg
+
+import (
+	"io/ioutil"
+	"strings"
+
+	"gopkg.in/yaml.v2"
+)
+
+type YourServiceName struct {
+	Spec struct {
+		YourServiceName struct {
+      Template: {
+        CustomServiceConfig string `yaml:"customServiceConfig"`
+      }
+    }
+  }
+}
+
+func LoadYourServiceNameOpenshiftConfig(configPath string) string {
+	var sb strings.Builder
+	var yourService YourService
+
+	yamlFile, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &yourService)
+	if err != nil {
+		panic(err)
+	}
+	if strings.HasPrefix(yourService.Spec.YourServiceName.Template.CustomServiceConfig, "[") {
+		sb.WriteString(yourService.Spec.YourServiceName.Template.CustomServiceConfig)
+	}
+	return cleanIniSections(sb.String())
+}
+```
+
+* The function `LoadYourServiceNameOpenshiftConfig` is made to extract the configmap Ini parameters for your Openstack service. All the config parameters you want to extract should be declare here.
+
+
 ### Asciinema demo
 
 https://asciinema.org/a/JCgHLNHYC5DRVibJQK2YbCTSf
 
 ### TODO
 
-* Add option to compare the config files directly from files to pods
 * Improve reporting (console, debug and log file with general report)
 * Improve diff output for json and yaml
 * Improve Makefile entry with for example: make compare
