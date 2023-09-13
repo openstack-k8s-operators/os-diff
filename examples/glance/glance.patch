@@ -1,0 +1,44 @@
+spec:
+  glance:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+      customServiceConfig: |
+        [DEFAULT]
+        enabled_backends=default_backend:rbd
+        [glance_store]
+        default_backend=default_backend
+        [default_backend]
+        rbd_store_ceph_conf=/etc/ceph/ceph.conf
+        rbd_store_user=openstack
+        rbd_store_pool=images
+        store_description=Ceph glance store backend.
+      storageClass: "local-storage"
+      storageRequest: 10G
+      glanceAPIInternal:
+        externalEndpoints:
+        - endpoint: internal
+          ipAddressPool: internalapi
+          loadBalancerIPs:
+          - 172.17.0.80
+        networkAttachments:
+        - storage
+      glanceAPIExternal:
+        networkAttachments:
+        - storage
+  extraMounts:
+    - extraVol:
+      - propagation:
+        - Glance
+        extraVolType: Ceph
+        volumes:
+        - name: ceph
+          projected:
+            sources:
+            - secret:
+                name: ceph-conf-files
+        mounts:
+        - name: ceph
+          mountPath: "/etc/ceph"
+          readOnly: true

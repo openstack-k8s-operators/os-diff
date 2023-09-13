@@ -213,12 +213,7 @@ func (p *GoDiffDataStruct) Process(dir1 string, dir2 string) error {
 					// Compare the two files
 					if !stringInSlice(path, p.unmatchFile) {
 						p.unmatchFile = append(p.unmatchFile, path)
-
-						compareFiles := CompareFileNames{
-							Origin:      path,
-							Destination: path2,
-						}
-						report, err := compareFiles.CompareFiles()
+						report, err := CompareFiles(path, path2, false, true)
 						if err != nil {
 							return err
 						}

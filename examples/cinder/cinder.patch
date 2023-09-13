@@ -1,0 +1,68 @@
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderAPI:
+        customServiceConfig: |
+          [DEFAULT]
+          osapi_volume_listen=standalone.ctlplane.localdomain
+          osapi_volume_workers=4
+        externalEndpoints:
+        - endpoint: internal
+          ipAddressPool: internalapi
+          loadBalancerIPs:
+          - 172.17.0.80
+        replicas: 3
+      cinderBackup:
+        networkAttachments:
+        - storage
+        replicas: 0
+      cinderScheduler:
+        customServiceConfig: |
+          [DEFAULT]
+          scheduler_driver=cinder.scheduler.filter_scheduler.FilterScheduler
+        replicas: 1
+      cinderVolumes:
+        networkAttachments:
+        - storage
+        tripleo-iscsi:
+          customServiceConfig: |
+            [tripleo_iscsi]
+            backend_host=hostgroup
+            volume_backend_name=tripleo_iscsi
+            volume_driver=cinder.volume.drivers.lvm.LVMVolumeDriver
+            target_ip_address=192.168.24.1
+            target_helper=lioadm
+            volumes_dir=/var/lib/cinder/volumes
+            target_protocol=iscsi
+            [DEFAULT]
+            enabled_backends=tripleo_iscsi
+      customServiceConfig: |
+        [DEFAULT]
+        enable_v3_api=True
+        auth_strategy=keystone
+        storage_availability_zone=nova
+        default_availability_zone=nova
+        default_volume_type=tripleo
+        debug=True
+        rpc_response_timeout=60
+        control_exchange=openstack
+        [database]
+        max_retries=-1
+        db_max_retries=-1
+        [keystone_authtoken]
+        interface=internal
+        region_name=regionOne
+        memcache_use_advanced_pool=True
+        auth_type=password
+        user_domain_name=Default
+        project_name=service
+        project_domain_name=Default
+        [oslo_middleware]
+        enable_proxy_headers_parsing=True
+        [oslo_policy]
+        policy_file=/etc/cinder/policy.yaml
+      databaseInstance: openstack
+      secret: osp-secret
+      serviceUser:
+      - cinder

@@ -25,6 +25,7 @@ import (
 // diffCmd represents the diff command
 var source string
 var dest string
+var debug bool
 
 var diffCmd = &cobra.Command{
 	Use:   "diff",
@@ -32,20 +33,13 @@ var diffCmd = &cobra.Command{
 	Long: `Print diff for files provided via the command line: For example:
 os-diff diff --origin=tests/podman/keystone.conf --destination=tests/ocp/keystone.conf`,
 	Run: func(cmd *cobra.Command, args []string) {
-		goDiff := &godiff.CompareFileNames{
-			Origin:      source,
-			Destination: dest,
-		}
-
-		err := goDiff.DiffFiles()
-		if err != nil {
-			panic(err)
-		}
+		godiff.CompareFiles(source, dest, true, debug)
 	},
 }
 
 func init() {
 	diffCmd.Flags().StringVarP(&source, "origin", "o", "", "Source file.")
 	diffCmd.Flags().StringVarP(&dest, "destination", "d", "", "Destination file.")
+	diffCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug.")
 	rootCmd.AddCommand(diffCmd)
 }

@@ -169,6 +169,117 @@ Source file path: /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf, 
 -max_active_keys=5
 ```
 
+### Openshift Pod config comparison
+
+When you prepare the adoption of your TripleO cloud to your Openshift cluster, you might want to compare and verify if the config describe in your Openshift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the Openshift config, the service is correctly configured.
+
+The service command allow you to compare Yaml Openshift config patch with Openstack Ini configuration file from your services.
+You can also query Openshift pods to check if the configuration are well set.
+
+Example:
+
+```
+spec:
+  glance:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      containerImage: foo
+      customServiceConfig: |
+        [DEFAULT]
+        enabled_backends=default_backend:rbd
+        [glance_store]
+        default_backend=default_backend
+        [default_backend]
+        rbd_store_ceph_conf=/etc/ceph/ceph.conf
+        rbd_store_user=openstack
+        rbd_store_pool=images
+        store_description=Ceph glance store backend.
+...
+```
+
+Run service command:
+
+```service
+./os-diff service -s glance -o examples/glance/glance.patch -c /tmp/glance.conf
+Source file path: examples/glance/glance.patch, difference with: /tmp/glance.conf
+-enabled_backends=default_backend:rbd
+-[glance_store]
+-default_backend=default_backend
+-[default_backend]
+-rbd_store_ceph_conf=/etc/ceph/ceph.conf
+-rbd_store_user=openstack
+-rbd_store_pool=images
+-store_description=Ceph glance store backend.
+```
+
+Run comparison against the deployed pod:
+
+```service
+./os-diff service -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf \
+--frompod -p glance-external-api-678c6c79d7-24t7t
+
+Source file path: examples/glance/glance.patch, difference with: /etc/glance/glance-api.conf
+[DEFAULT]
+-enabled_backends=default_backend:rbd
+[glance_store]
+-default_backend=default_backend
+-[default_backend]
+-rbd_store_ceph_conf=/etc/ceph/ceph.conf
+-rbd_store_user=openstack
+-rbd_store_pool=images
+-store_description=Ceph glance store backend.
+```
+
+### Add service
+
+If you want to add a new Openstack service to this tool follow those instructions:
+
+* Convert your Openshift configmap to a GO struct with:
+https://zhwt.github.io/yaml-to-go/
+* Create a <service-name>.go file into pkg/servicecfg/
+* Paste your generated structure and the following code:
+```
+package servicecfg
+
+import (
+	"io/ioutil"
+	"strings"
+
+	"gopkg.in/yaml.v2"
+)
+
+type YourServiceName struct {
+	Spec struct {
+		YourServiceName struct {
+      Template: {
+        CustomServiceConfig string `yaml:"customServiceConfig"`
+      }
+    }
+  }
+}
+
+func LoadYourServiceNameOpenshiftConfig(configPath string) string {
+	var sb strings.Builder
+	var yourService YourService
+
+	yamlFile, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &yourService)
+	if err != nil {
+		panic(err)
+	}
+	if strings.HasPrefix(yourService.Spec.YourServiceName.Template.CustomServiceConfig, "[") {
+		sb.WriteString(yourService.Spec.YourServiceName.Template.CustomServiceConfig)
+	}
+	return cleanIniSections(sb.String())
+}
+```
+
+* The function `LoadYourServiceNameOpenshiftConfig` is made to extract the configmap Ini parameters for your Openstack service. All the config parameters you want to extract should be declare here.
 
 
 ### Asciinema demo
@@ -177,7 +288,6 @@ https://asciinema.org/a/JCgHLNHYC5DRVibJQK2YbCTSf
 
 ### TODO
 
-* Add option to compare the config files directly from files to pods
 * Improve reporting (console, debug and log file with general report)
 * Improve diff output for json and yaml
 * Improve Makefile entry with for example: make compare
