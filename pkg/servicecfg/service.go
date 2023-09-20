@@ -49,12 +49,16 @@ func DiffServiceConfig(service string, ocpConfig string, serviceConfig string, s
 	return nil
 }
 
-func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig string, podname string) error {
+func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig string, containerName string) error {
 	var servicePatch string
+	var podName string
 	// Get ocpConfig
 	if service == "cinder" {
+		podName = "cinder"
 		servicePatch = LoadCinderOpenshiftConfig(ocpConfig)
 	} else if service == "glance" {
+		// @todo: should be move a config spec file, users must be describe their env in a file.cfg.
+		podName = "glance-external-api"
 		servicePatch = LoadGlanceOpenshiftConfig(ocpConfig)
 	} else {
 		msg := `Service not supported, please implement it.
@@ -63,7 +67,7 @@ func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig st
 		panic(msg)
 	}
 	// Get service Config
-	podConfig, err := GetConfigFromPod(serviceConfig, podname)
+	podConfig, err := GetConfigFromPod(serviceConfig, podName, containerName)
 	if err != nil {
 		panic(err)
 	}
