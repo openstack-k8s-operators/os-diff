@@ -34,10 +34,14 @@ func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, servic
 	return report, nil
 }
 
-func GetConfigFromPod(serviceConfigPath string, podname string) ([]byte, error) {
+func GetConfigFromPod(serviceConfigPath string, podName string, containerName string) ([]byte, error) {
 
 	if TestOCConnection() {
-		cmd := exec.Command("oc", "exec", podname, "--", "cat", serviceConfigPath)
+		fullName, err := GetPodFullName(podName)
+		if err != nil {
+			return nil, err
+		}
+		cmd := exec.Command("oc", "exec", fullName, "-c", containerName, "--", "cat", serviceConfigPath)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(string(out))
@@ -63,6 +67,16 @@ func GetConfigFromPodman(serviceConfigPath string, podmanName string) ([]byte, e
 
 func GenerateOpenshiftConfig(outputConfigPath string, serviceConfigPath string) error {
 	return nil
+}
+
+func GetPodFullName(podName string) (string, error) {
+	// Get full pod name
+	cmd := "oc get pod | grep " + podName + " | cut -f 1 -d' '"
+	output, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		return string(output), err
+	}
+	return string(output[:len(output)-1]), nil
 }
 
 func TestOCConnection() bool {
