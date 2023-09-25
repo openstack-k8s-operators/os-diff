@@ -60,7 +60,7 @@ type Cinder struct {
 	} `yaml:"spec"`
 }
 
-func LoadCinderOpenshiftConfig(configPath string) string {
+func LoadCinderOpenShiftConfig(configPath string) string {
 
 	// String builder for Cinder Config
 	var sb strings.Builder

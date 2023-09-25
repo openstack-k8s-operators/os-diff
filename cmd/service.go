@@ -33,8 +33,8 @@ var sidebyside bool
 
 var serviceCmd = &cobra.Command{
 	Use:   "service",
-	Short: "Print diff between an Openshift Config spec and an Openstack service config file",
-	Long: `Print diff from an Openshit config spec file and an Openstack sercice config file.
+	Short: "Print diff between an OpenShift Config spec and an OpenStack service config file",
+	Long: `Print diff from an OpenShift config spec file and an OpenStack sercice config file.
 		   For example:
            ./os-diff service --service cinder --ocp examples/cinder/cinder.patch --serviceconfig examples/cinder/cinder.conf
 		   or
@@ -57,11 +57,11 @@ var serviceCmd = &cobra.Command{
 }
 
 func init() {
-	serviceCmd.Flags().StringVarP(&ocp, "ocp", "o", "", "Openshift config spec file path.")
-	serviceCmd.Flags().StringVarP(&config, "config", "c", "", "Openstack service config file path.")
-	serviceCmd.Flags().StringVarP(&service, "service", "s", "", "Openstack service, could be one of: Cinder, Glance...")
+	serviceCmd.Flags().StringVarP(&ocp, "ocp", "o", "", "OpenShift config spec file path.")
+	serviceCmd.Flags().StringVarP(&config, "config", "c", "", "OpenStack service config file path.")
+	serviceCmd.Flags().StringVarP(&service, "service", "s", "", "OpenStack service, could be one of: Cinder, Glance...")
 	serviceCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
-	serviceCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from Openstack podman container.")
+	serviceCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from OpenStack podman container.")
 	serviceCmd.Flags().BoolVar(&sidebyside, "sidebyside", false, "Compare both: source->dest and dest->source.")
 	serviceCmd.Flags().StringVarP(&podname, "podname", "p", "", "Name of the pod of the service: cinder-api.")
 	rootCmd.AddCommand(serviceCmd)
