@@ -70,7 +70,7 @@ type Glance struct {
 	} `yaml:"spec"`
 }
 
-func LoadGlanceOpenshiftConfig(configPath string) string {
+func LoadGlanceOpenShiftConfig(configPath string) string {
 	var sb strings.Builder
 	// Service structure
 	var service Glance

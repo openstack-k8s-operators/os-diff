@@ -65,7 +65,7 @@ func GetConfigFromPodman(serviceConfigPath string, podmanName string) ([]byte, e
 	return []byte(out), nil
 }
 
-func GenerateOpenshiftConfig(outputConfigPath string, serviceConfigPath string) error {
+func GenerateOpenShiftConfig(outputConfigPath string, serviceConfigPath string) error {
 	return nil
 }
 

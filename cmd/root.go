@@ -25,8 +25,8 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "os-diff",
-	Short: "Tool for pulling and inspecting config files for Openstack services",
-	Long: `Pull and compare Openstack services configuration files from pods
+	Short: "Tool for pulling and inspecting config files for OpenStack services",
+	Long: `Pull and compare OpenStack services configuration files from pods
 or podman containers. For example:
 
 You can pull configuration from a Keystone container and compare

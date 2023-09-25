@@ -20,12 +20,12 @@ func DiffServiceConfig(service string, ocpConfig string, serviceConfig string, s
 	var servicePatch string
 	// Get ocpConfig
 	if service == "cinder" {
-		servicePatch = LoadCinderOpenshiftConfig(ocpConfig)
+		servicePatch = LoadCinderOpenShiftConfig(ocpConfig)
 	} else if service == "glance" {
-		servicePatch = LoadGlanceOpenshiftConfig(ocpConfig)
+		servicePatch = LoadGlanceOpenShiftConfig(ocpConfig)
 	} else {
 		msg := `Service not supported, please implement it.
-			Follow the instructions to add new Openstack services here:
+			Follow the instructions to add new OpenStack services here:
 			https://github.com/openstack-k8s-operators/os-diff#add-service`
 		panic(msg)
 	}
@@ -55,14 +55,14 @@ func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig st
 	// Get ocpConfig
 	if service == "cinder" {
 		podName = "cinder"
-		servicePatch = LoadCinderOpenshiftConfig(ocpConfig)
+		servicePatch = LoadCinderOpenShiftConfig(ocpConfig)
 	} else if service == "glance" {
 		// @todo: should be move a config spec file, users must be describe their env in a file.cfg.
 		podName = "glance-external-api"
-		servicePatch = LoadGlanceOpenshiftConfig(ocpConfig)
+		servicePatch = LoadGlanceOpenShiftConfig(ocpConfig)
 	} else {
 		msg := `Service not supported, please implement it.
-			Follow the instructions to add new Openstack services here:
+			Follow the instructions to add new OpenStack services here:
 			https://github.com/openstack-k8s-operators/os-diff#add-service`
 		panic(msg)
 	}
@@ -83,12 +83,12 @@ func DiffServiceConfigFromPodman(service string, ocpConfig string, serviceConfig
 	var servicePatch string
 	// Get ocpConfig
 	if service == "cinder" {
-		servicePatch = LoadCinderOpenshiftConfig(ocpConfig)
+		servicePatch = LoadCinderOpenShiftConfig(ocpConfig)
 	} else if service == "glance" {
-		servicePatch = LoadGlanceOpenshiftConfig(ocpConfig)
+		servicePatch = LoadGlanceOpenShiftConfig(ocpConfig)
 	} else {
 		msg := `Service not supported, please implement it.
-			Follow the instructions to add new Openstack services here:
+			Follow the instructions to add new OpenStack services here:
 			https://github.com/openstack-k8s-operators/os-diff#add-service`
 		panic(msg)
 	}

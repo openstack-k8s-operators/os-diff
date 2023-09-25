@@ -1,16 +1,16 @@
 # OS-diff
-Openstack / Openshift diff tool
+OpenStack / OpenShift diff tool
 
-This tool collects Openstack/Openshift service configurations,
+This tool collects OpenStack/OpenShift service configurations,
 compares configuration files, makes a diff and creates a report to the user
 in order to provide informations and warnings after a migration from
-Openstack to Openstack on Openshift migration.
+OpenStack to OpenStack on OpenShift migration.
 
 ### Usage
 
 #### Pull configuration step
 
-Before running the Pull command you need to configure the ssh access to your environements (Openstack and OCP).
+Before running the Pull command you need to configure the ssh access to your environements (OpenStack and OCP).
 Edit the ssh.config provided with this project and make sure you can ssh on your hosts with the command:
 
 ```
@@ -169,12 +169,12 @@ Source file path: /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf, 
 -max_active_keys=5
 ```
 
-### Openshift Pod config comparison
+### OpenShift Pod config comparison
 
-When you prepare the adoption of your TripleO cloud to your Openshift cluster, you might want to compare and verify if the config describe in your Openshift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the Openshift config, the service is correctly configured.
+When you prepare the adoption of your TripleO cloud to your OpenShift cluster, you might want to compare and verify if the config describe in your OpenShift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the OpenShift config, the service is correctly configured.
 
-The service command allow you to compare Yaml Openshift config patch with Openstack Ini configuration file from your services.
-You can also query Openshift pods to check if the configuration are well set.
+The service command allow you to compare Yaml OpenShift config patch with OpenStack Ini configuration file from your services.
+You can also query OpenShift pods to check if the configuration are well set.
 
 Example:
 
@@ -233,9 +233,9 @@ Source file path: examples/glance/glance.patch, difference with: /etc/glance/gla
 
 ### Add service
 
-If you want to add a new Openstack service to this tool follow those instructions:
+If you want to add a new OpenStack service to this tool follow those instructions:
 
-* Convert your Openshift configmap to a GO struct with:
+* Convert your OpenShift configmap to a GO struct with:
 https://zhwt.github.io/yaml-to-go/
 * Create a <service-name>.go file into pkg/servicecfg/
 * Paste your generated structure and the following code:
@@ -259,7 +259,7 @@ type YourServiceName struct {
   }
 }
 
-func LoadYourServiceNameOpenshiftConfig(configPath string) string {
+func LoadYourServiceNameOpenShiftConfig(configPath string) string {
 	var sb strings.Builder
 	var yourService YourService
 
@@ -279,7 +279,7 @@ func LoadYourServiceNameOpenshiftConfig(configPath string) string {
 }
 ```
 
-* The function `LoadYourServiceNameOpenshiftConfig` is made to extract the configmap Ini parameters for your Openstack service. All the config parameters you want to extract should be declare here.
+* The function `LoadYourServiceNameOpenShiftConfig` is made to extract the configmap Ini parameters for your OpenStack service. All the config parameters you want to extract should be declare here.
 
 
 ### Asciinema demo
