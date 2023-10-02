@@ -27,22 +27,28 @@ var cloud_engine string
 var output_dir string
 var play string
 var verbose bool
+var extraVars map[string]string
 
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pull configurations from Podman or OCP",
 	Long: `This command pulls configuration files by services from Podman
 	environment or OCP. For example:
-  os-diff pull --cloud_engine=ocp --inventory=$PWD/hosts --output-dir=/tmp`,
+    os-diff pull --cloud_engine=ocp --inventory=$PWD/hosts --output-dir=/tmp`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		ansiblePlaybookConnectionOptions := &ansible.AnsiblePlaybookConnectionOptions{
 			Connection: "local",
 		}
 
+		envMap := make(map[string]interface{})
+		for key, value := range extraVars {
+			envMap[key] = value
+		}
 		ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
 			Inventory: inventory,
 			Verbosity: verbose,
+			ExtraVars: envMap,
 		}
 
 		if cloud_engine == "ocp" {
@@ -69,5 +75,6 @@ func init() {
 	pullCmd.Flags().StringVarP(&cloud_engine, "cloud_engine", "c", "ocp", "Service engine, could be: ocp or podman.")
 	pullCmd.Flags().StringVar(&output_dir, "output_dir", "/tmp", "Output directory for the configuration files.")
 	pullCmd.Flags().BoolVar(&verbose, "verbose", false, "Enable Ansible verbosity.")
+	pullCmd.Flags().StringToStringVarP(&extraVars, "extra-vars", "e", nil, "Ansible extra vars")
 	rootCmd.AddCommand(pullCmd)
 }
