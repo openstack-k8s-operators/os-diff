@@ -41,14 +41,14 @@ var pullCmd = &cobra.Command{
 			Connection: "local",
 		}
 
-		envMap := make(map[string]interface{})
+		extraVarsMap := make(map[string]interface{})
 		for key, value := range extraVars {
-			envMap[key] = value
+			extraVarsMap[key] = value
 		}
 		ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
 			Inventory: inventory,
 			Verbosity: verbose,
-			ExtraVars: envMap,
+			ExtraVars: extraVarsMap,
 		}
 
 		if cloud_engine == "ocp" {
