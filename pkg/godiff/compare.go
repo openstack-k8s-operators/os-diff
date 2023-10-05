@@ -147,3 +147,25 @@ func CompareFiles(origin string, dest string, print bool, verbose bool) ([]strin
 	}
 	return report, nil
 }
+
+func CompareFilesFromRemote(origin string, dest string, originRemoteCmd string, destRemoteCmd string, verbose bool) error {
+	// Get Config
+	originConfigContent, err := GetConfigFromRemote(originRemoteCmd, origin)
+	if err != nil {
+		panic(err)
+	}
+	destConfigContent, err := GetConfigFromRemote(destRemoteCmd, dest)
+	if err != nil {
+		panic(err)
+	}
+
+	report, err := CompareIni(originConfigContent, destConfigContent, origin, dest, verbose)
+	if err != nil {
+		panic(err)
+	}
+	if report != nil {
+		PrintReport(report)
+	}
+	return nil
+
+}

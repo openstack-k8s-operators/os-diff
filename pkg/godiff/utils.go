@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 	"reflect"
 	"strings"
 
@@ -340,4 +341,17 @@ func CompareRawData(rawdata1 []byte, rawdata2 []byte, origin string, dest string
 		report = append([]string{msg}, report...)
 	}
 	return report, nil
+}
+
+func GetConfigFromRemote(remoteCmd string, configPath string) ([]byte, error) {
+
+	fullCmd := remoteCmd + "cat" + " " + configPath
+	remoteArray := strings.Split(fullCmd, " ")
+	cmd := exec.Command(remoteArray[0], remoteArray[1:]...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(out))
+		return out, err
+	}
+	return []byte(out), nil
 }

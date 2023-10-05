@@ -26,20 +26,34 @@ import (
 var source string
 var dest string
 var debug bool
+var remote bool
+var sourceCmd string
+var destCmd string
 
 var diffCmd = &cobra.Command{
 	Use:   "diff",
 	Short: "Print diff for two specific files",
 	Long: `Print diff for files provided via the command line: For example:
-os-diff diff --origin=tests/podman/keystone.conf --destination=tests/ocp/keystone.conf`,
+./os-diff os-diff diff --source=tests/podman/keystone.conf --destination=tests/ocp/keystone.conf
+Example for remote diff:
+export CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
+export CMD2="oc exec glance-external-api-6cf6c98564-blggc -c glance-api --"
+./os-diff diff --dest-cmd "$CMD2" --orgin-cmd "$CMD1" -o /etc/glance/glance-api.conf -d /etc/glance/glance.conf.d/00-config.conf --remote`,
 	Run: func(cmd *cobra.Command, args []string) {
-		godiff.CompareFiles(source, dest, true, debug)
+		if remote {
+			godiff.CompareFilesFromRemote(source, dest, sourceCmd, destCmd, debug)
+		} else {
+			godiff.CompareFiles(source, dest, true, debug)
+		}
 	},
 }
 
 func init() {
-	diffCmd.Flags().StringVarP(&source, "origin", "o", "", "Source file.")
+	diffCmd.Flags().StringVarP(&source, "source", "o", "", "Source file.")
 	diffCmd.Flags().StringVarP(&dest, "destination", "d", "", "Destination file.")
+	diffCmd.Flags().StringVarP(&sourceCmd, "source-cmd", "", "", "Remote command for the source configuration file.")
+	diffCmd.Flags().StringVarP(&destCmd, "dest-cmd", "", "", "Remote command for the destination configuration file.")
 	diffCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug.")
+	diffCmd.Flags().BoolVar(&remote, "remote", false, "Run the diff remotely.")
 	rootCmd.AddCommand(diffCmd)
 }
