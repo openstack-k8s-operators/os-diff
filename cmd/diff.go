@@ -22,37 +22,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// diffCmd represents the diff command
-var source string
-var dest string
+// Diff parameters
 var debug bool
 var remote bool
-var sourceCmd string
-var destCmd string
+var file1Cmd string
+var file2Cmd string
 
 var diffCmd = &cobra.Command{
-	Use:   "diff",
+	Use:   "diff [file1] [file2]",
 	Short: "Print diff for two specific files",
 	Long: `Print diff for files provided via the command line: For example:
-./os-diff os-diff diff --source=tests/podman/keystone.conf --destination=tests/ocp/keystone.conf
+./os-diff diff tests/podman/keystone.conf tests/ocp/keystone.conf
 Example for remote diff:
 export CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
 export CMD2="oc exec glance-external-api-6cf6c98564-blggc -c glance-api --"
-./os-diff diff --dest-cmd "$CMD2" --orgin-cmd "$CMD1" -o /etc/glance/glance-api.conf -d /etc/glance/glance.conf.d/00-config.conf --remote`,
+./os-diff diff /etc/glance/glance-api.conf /etc/glance/glance.conf.d/00-config.conf --file1-cmd "$CMD1" --file2-cmd "$CMD2" /etc/glance/glance-api.conf -d /etc/glance/glance.conf.d/00-config.conf --remote`,
 	Run: func(cmd *cobra.Command, args []string) {
+		file1 := args[0]
+		file2 := args[1]
 		if remote {
-			godiff.CompareFilesFromRemote(source, dest, sourceCmd, destCmd, debug)
+			godiff.CompareFilesFromRemote(file1, file2, file1Cmd, file2Cmd, debug)
 		} else {
-			godiff.CompareFiles(source, dest, true, debug)
+			godiff.CompareFiles(file1, file2, true, debug)
 		}
 	},
 }
 
 func init() {
-	diffCmd.Flags().StringVarP(&source, "source", "o", "", "Source file.")
-	diffCmd.Flags().StringVarP(&dest, "destination", "d", "", "Destination file.")
-	diffCmd.Flags().StringVarP(&sourceCmd, "source-cmd", "", "", "Remote command for the source configuration file.")
-	diffCmd.Flags().StringVarP(&destCmd, "dest-cmd", "", "", "Remote command for the destination configuration file.")
+	diffCmd.Flags().StringVarP(&file1Cmd, "file1-cmd", "", "", "Remote command for the file1 configuration file.")
+	diffCmd.Flags().StringVarP(&file1Cmd, "file2-cmd", "", "", "Remote command for the file2 configuration file.")
 	diffCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug.")
 	diffCmd.Flags().BoolVar(&remote, "remote", false, "Run the diff remotely.")
 	rootCmd.AddCommand(diffCmd)

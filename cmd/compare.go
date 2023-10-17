@@ -23,22 +23,24 @@ import (
 )
 
 // compareCmd represents the compare command
-var origin string
-var destination string
 var output string
 var reverse bool
 
 var compareCmd = &cobra.Command{
-	Use:   "compare",
-	Short: "Compare two files or directories",
+	Use:   "compare [PATH1] [PATH2]",
+	Short: "Compare files and directories from PATH1 and PATH2",
 	Long: `Compare files or directories from two different paths. For example:
-		os-diff compare --origin=tests/podman/keystone.conf --destination=tests/ocp/keystone.conf --output=output.txt
+		./os-diff compare $PATH1 $PATH2
+
+		./os-diff compare tests/podman/keystone.conf tests/ocp/keystone.conf --output=output.txt
 		or
-		os-diff compare --origin=tests/podman-containers/ --destination=tests/ocp-pods/ --output=output.txt`,
+		os-diff compare tests/podman-containers/ tests/ocp-pods/ --output=output.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
+		path1 := args[0]
+		path2 := args[1]
 		goDiff := &godiff.GoDiffDataStruct{
-			Origin:      origin,
-			Destination: destination,
+			Origin:      path1,
+			Destination: path2,
 		}
 		err := goDiff.ProcessDirectories(reverse)
 		if err != nil {
@@ -48,8 +50,6 @@ var compareCmd = &cobra.Command{
 }
 
 func init() {
-	compareCmd.Flags().StringVarP(&origin, "origin", "o", "", "Origin file or directory.")
-	compareCmd.Flags().StringVarP(&destination, "destination", "d", "", "Destination file or directory")
 	compareCmd.Flags().StringVar(&output, "output", "output.txt", "Output file (default is $PWD/output.txt)")
 	compareCmd.Flags().BoolVar(&reverse, "reverse", false, "Search difference in both directories: origin and destination.")
 	rootCmd.AddCommand(compareCmd)
