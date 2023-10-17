@@ -267,14 +267,14 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 		sectionFound = false
 		_, err := cfg1.GetSection(sec2.Name())
 		if err != nil {
-			msg := fmt.Sprintf("+[%s]\n", sec2.Name())
+			msg := fmt.Sprintf("-[%s]\n", sec2.Name())
 			if !stringInSlice(msg, report) {
 				diffFound = true
 				log.Warn("Difference detected. Section: ", sec2.Name(), " not found in:", dest)
 				report = append(report, msg)
 			}
 			for _, key2 := range sec2.Keys() {
-				msg = fmt.Sprintf("+%s=%s\n", key2.Name(), key2.Value())
+				msg = fmt.Sprintf("-%s=%s\n", key2.Name(), key2.Value())
 				if !stringInSlice(msg, report) {
 					log.Warn("Difference detected -- Section: ", sec2.Name(), " Key ", key2.Name(), " not found in:", dest)
 					report = append(report, msg)
