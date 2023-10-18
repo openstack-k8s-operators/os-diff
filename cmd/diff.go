@@ -52,18 +52,22 @@ Example for directories:
 
 /!\ Important: remote option is only available for files comparison.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 2 {
+			fmt.Println("Error: Insufficient arguments. Please provide at least two file names.")
+			return
+		}
 		path1 := args[0]
 		path2 := args[1]
 
 		fi1, err := os.Stat(path1)
 		if err != nil {
 			fmt.Println(err)
-			panic(err)
+			return
 		}
 		fi2, err := os.Stat(path2)
 		if err != nil {
 			fmt.Println(err)
-			panic(err)
+			return
 		}
 		if fi1.IsDir() || fi2.IsDir() || quiet {
 			goDiff := &godiff.GoDiffDataStruct{
@@ -72,7 +76,7 @@ Example for directories:
 			}
 			err := goDiff.ProcessDirectories(false)
 			if err != nil {
-				panic(err)
+				return
 			}
 		} else {
 			if remote {
