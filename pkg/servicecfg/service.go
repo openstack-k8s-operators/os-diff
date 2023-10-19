@@ -16,6 +16,24 @@
  */
 package servicecfg
 
+import (
+	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v2"
+)
+
+type ParentStruct struct {
+	Spec SimpleServiceStruct `yaml:"spec"`
+}
+
+type SimpleServiceStruct map[string]struct {
+	Enabled  bool `yaml:"enabled"`
+	Template struct {
+		CustomServiceConfig string `yaml:"customServiceConfig"`
+	} `yaml:"template"`
+}
+
 func DiffServiceConfig(service string, ocpConfig string, serviceConfig string, sidebyside bool) error {
 	var servicePatch string
 	// Get ocpConfig
@@ -102,5 +120,37 @@ func DiffServiceConfigFromPodman(service string, ocpConfig string, serviceConfig
 	if err != nil {
 		panic(err)
 	}
+	return nil
+}
+
+func GenerateConfigPatchFromIni(serviceName string, configFile string, outputFile string, serviceEnable bool) error {
+	// Service structure
+	parentStruct := ParentStruct{}
+	configStruct := SimpleServiceStruct{}
+
+	config, err := os.ReadFile(configFile)
+	if err != nil {
+		return err
+	}
+	service := configStruct[serviceName]
+
+	service.Enabled = serviceEnable
+	service.Template.CustomServiceConfig = string(config)
+	configStruct[serviceName] = service
+
+	parentStruct.Spec = configStruct
+
+	yamlData, err := yaml.Marshal(&parentStruct)
+	if err != nil {
+		fmt.Printf("Error marshaling YAML: %v\n", err)
+		return err
+	}
+	err = os.WriteFile(outputFile, yamlData, 0644)
+	if err != nil {
+		fmt.Printf("Error writing file: %v\n", err)
+		return nil
+	}
+
+	fmt.Println("YAML file generated: ", outputFile)
 	return nil
 }
