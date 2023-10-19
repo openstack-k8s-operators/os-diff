@@ -35,10 +35,10 @@ var cfgDiffCmd = &cobra.Command{
 	Use:   "cdiff",
 	Short: "Print diff between an OpenShift configmap patch and an OpenStack service config file",
 	Long: `Print diff from an OpenShift config patch file and an OpenStack sercice config file.
-		   For example:
-           ./os-diff cdiff -s cinder --configmap examples/cinder/cinder.patch --configfile examples/cinder/cinder.conf
-		   or
-		   ./os-diff cdiff --service cinder --configmap cinder.patch --configfile /etc/cinder.conf --frompod --podname cinder-api`,
+		For example:
+		./os-diff cdiff -s cinder --configmap examples/cinder/cinder.patch --configfile examples/cinder/cinder.conf
+		or
+		./os-diff cdiff --service cinder --configmap cinder.patch --configfile /etc/cinder.conf --frompod --podname cinder-api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if frompod {
 			if podname == "" {
