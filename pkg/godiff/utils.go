@@ -223,7 +223,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 					if !sectionFound {
 						sectionFound = true
 						msg = fmt.Sprintf(
-							"[%s]\n+%s=%s\n-%s=%s\n",
+							"[%s]\n-%s=%s\n+%s=%s\n",
 							sec1.Name(),
 							key1.Name(),
 							key1.Value(),
@@ -231,7 +231,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 							key2.Value(),
 						)
 					} else {
-						msg = fmt.Sprintf("+%s=%s\n-%s=%s\n", key1.Name(), key1.Value(), key2.Name(), key2.Value())
+						msg = fmt.Sprintf("-%s=%s\n+%s=%s\n", key1.Name(), key1.Value(), key2.Name(), key2.Value())
 					}
 					if !stringInSlice(msg, report) {
 						diffFound = true
