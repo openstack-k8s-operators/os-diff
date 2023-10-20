@@ -31,8 +31,8 @@ var remoteCmd string
 
 var cfgMapDiffCmd = &cobra.Command{
 	Use:   "cfgmap-diff",
-	Short: "Print diff between OpenShift configmap and an OpenStack config file",
-	Long: `Print diff from OpenShift configmap and an OpenStack  config file.
+	Short: "Print diff between OpenShift configmap and OpenStack/TripleO config files",
+	Long: `Print diff from OpenShift configmap and OpenStack/TripleO config files.
 For example:
 ./os-diff cfgmap-diff --configmap keystone-config-data --config /tmp/collect_tripleo_configs/keystone/etc/keystone
 or
