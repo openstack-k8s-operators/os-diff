@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os-diff/pkg/godiff"
 	"path/filepath"
 	"strings"
 
@@ -176,6 +177,8 @@ func GenerateConfigPatchFromIni(serviceName string, configFile string, outputFil
 func DiffConfigMap(configMapName string, orgConfigPath string, fromRemote bool, remoteCmd string) error {
 	var config []byte
 	var err error
+	var isDir bool
+	var isConfigNameisDir bool
 	// Get configMap
 	configMapStat, err := os.Stat(configMapName)
 	if err != nil {
@@ -192,12 +195,21 @@ func DiffConfigMap(configMapName string, orgConfigPath string, fromRemote bool, 
 		return fmt.Errorf("Wrong configmap arguments, need file or oc get configmap/<name> instead.")
 	}
 
-	configPathStat, err := os.Stat(orgConfigPath)
-	if err != nil {
-		fmt.Println(err)
-		return err
+	isDir = false
+	if fromRemote {
+		isDir, err = RemoteStatDir(remoteCmd, orgConfigPath)
+		if err != nil {
+			fmt.Println("Error while trying to stat remote:", orgConfigPath, "no such file or directory.")
+			return err
+		}
+	} else {
+		configPathStat, err := os.Stat(orgConfigPath)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		isDir = configPathStat.IsDir()
 	}
-
 	// Start processing data
 	var configMapdata ConfigMapDataStruct
 	err = yaml.Unmarshal(config, &configMapdata)
@@ -205,16 +217,24 @@ func DiffConfigMap(configMapName string, orgConfigPath string, fromRemote bool, 
 		log.Fatal(err)
 	}
 	for key, _ := range configMapdata.Data {
-		if configPathStat.IsDir() {
+		if isDir {
 			// Check if orgConfigPath and confName exists
 			confPath := filepath.Join(orgConfigPath, key)
-			configNameStat, err := os.Stat(confPath)
-			if err != nil {
-				continue
+			if fromRemote {
+				isConfigNameisDir, err = RemoteStatDir(remoteCmd, confPath)
+				if err != nil {
+					continue
+				}
+			} else {
+				configNameStat, err := os.Stat(confPath)
+				if err != nil {
+					continue
+				}
+				isConfigNameisDir = configNameStat.IsDir()
 			}
-			if !configNameStat.IsDir() {
+			if !isConfigNameisDir {
 				configMapPath := filepath.Join(configMapName, key)
-				compareIniFromFileAndStringBuilder(configMapdata.Data[key], confPath, configMapPath)
+				compareIniFromFileAndStringBuilder(configMapdata.Data[key], confPath, configMapPath, fromRemote, remoteCmd)
 			} else {
 				continue
 			}
@@ -222,19 +242,28 @@ func DiffConfigMap(configMapName string, orgConfigPath string, fromRemote bool, 
 			fileName := filepath.Base(orgConfigPath)
 			if fileName == key {
 				configMapPath := filepath.Join(configMapName, key)
-				compareIniFromFileAndStringBuilder(configMapdata.Data[key], orgConfigPath, configMapPath)
+				compareIniFromFileAndStringBuilder(configMapdata.Data[key], orgConfigPath, configMapPath, fromRemote, remoteCmd)
 			}
 		}
 	}
 	return nil
 }
 
-func compareIniFromFileAndStringBuilder(configString string, configFile string, path1 string) error {
+func compareIniFromFileAndStringBuilder(configString string, configFile string, path1 string, remote bool, remoteCmd string) error {
 	var sb strings.Builder
+	var configContent []byte
+	var err error
 	sb.WriteString(configString)
-	configContent, err := os.ReadFile(configFile)
-	if err != nil {
-		return err
+	if !remote {
+		configContent, err = os.ReadFile(configFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		configContent, err = godiff.GetConfigFromRemote(remoteCmd, configFile)
+		if err != nil {
+			return err
+		}
 	}
 	_, err = CompareIniConfig([]byte(sb.String()), configContent, path1, configFile)
 	if err != nil {

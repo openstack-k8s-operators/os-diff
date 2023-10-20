@@ -24,6 +24,15 @@ import (
 	"strings"
 )
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
 	report, err := godiff.CompareIni(rawdata1, rawdata2, ocpConfig, serviceConfig, false)
@@ -99,6 +108,21 @@ func GetOCConfigMap(configMapName string) ([]byte, error) {
 		return output, nil
 	}
 	return nil, fmt.Errorf("OC is not connected, you need to logged in before.")
+}
+
+func RemoteStatDir(sshCmd string, path string) (bool, error) {
+	// Get full pod name
+	cmd := sshCmd + " stat --printf='%F' " + path
+	output, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		return false, err
+	}
+	if strings.Contains("regular file", string(output)) {
+		return false, nil
+	} else if strings.Contains("directory", string(output)) {
+		return true, nil
+	}
+	return false, fmt.Errorf("Unable to stat: ", path)
 }
 
 func LoadServiceConfig(file string) ([]byte, error) {
