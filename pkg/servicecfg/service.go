@@ -18,7 +18,10 @@ package servicecfg
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -33,6 +36,21 @@ type SimpleServiceStruct map[string]struct {
 		CustomServiceConfig string `yaml:"customServiceConfig"`
 	} `yaml:"template"`
 }
+
+type KeystoneConfigMapStruct struct {
+	Data struct {
+		CustomConf            string `yaml:"custom.conf"`
+		HttpdConf             string `yaml:"httpd.conf"`
+		KeystoneAPIConfigJSON string `yaml:"keystone-api-config.json"`
+		KeystoneConf          string `yaml:"keystone.conf"`
+	} `yaml:"data"`
+}
+
+type ConfigMapDataStruct struct {
+	Data map[string]string `yaml:"data"`
+}
+
+type ConfigMapConf string
 
 func DiffServiceConfig(service string, ocpConfig string, serviceConfig string, sidebyside bool) error {
 	var servicePatch string
@@ -152,5 +170,75 @@ func GenerateConfigPatchFromIni(serviceName string, configFile string, outputFil
 	}
 
 	fmt.Println("YAML file generated: ", outputFile)
+	return nil
+}
+
+func DiffConfigMap(configMapName string, orgConfigPath string, fromRemote bool, remoteCmd string) error {
+	var config []byte
+	var err error
+	// Get configMap
+	configMapStat, err := os.Stat(configMapName)
+	if err != nil {
+		config, err = GetOCConfigMap(configMapName)
+		if err != nil {
+			return err
+		}
+	} else if !configMapStat.IsDir() {
+		config, err = os.ReadFile(configMapName)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("Wrong configmap arguments, need file or oc get configmap/<name> instead.")
+	}
+
+	configPathStat, err := os.Stat(orgConfigPath)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	// Start processing data
+	var configMapdata ConfigMapDataStruct
+	err = yaml.Unmarshal(config, &configMapdata)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for key, _ := range configMapdata.Data {
+		if configPathStat.IsDir() {
+			// Check if orgConfigPath and confName exists
+			confPath := filepath.Join(orgConfigPath, key)
+			configNameStat, err := os.Stat(confPath)
+			if err != nil {
+				continue
+			}
+			if !configNameStat.IsDir() {
+				configMapPath := filepath.Join(configMapName, key)
+				compareIniFromFileAndStringBuilder(configMapdata.Data[key], confPath, configMapPath)
+			} else {
+				continue
+			}
+		} else {
+			fileName := filepath.Base(orgConfigPath)
+			if fileName == key {
+				configMapPath := filepath.Join(configMapName, key)
+				compareIniFromFileAndStringBuilder(configMapdata.Data[key], orgConfigPath, configMapPath)
+			}
+		}
+	}
+	return nil
+}
+
+func compareIniFromFileAndStringBuilder(configString string, configFile string, path1 string) error {
+	var sb strings.Builder
+	sb.WriteString(configString)
+	configContent, err := os.ReadFile(configFile)
+	if err != nil {
+		return err
+	}
+	_, err = CompareIniConfig([]byte(sb.String()), configContent, path1, configFile)
+	if err != nil {
+		panic(err)
+	}
 	return nil
 }

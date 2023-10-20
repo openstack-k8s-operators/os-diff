@@ -88,6 +88,19 @@ func TestOCConnection() bool {
 	return true
 }
 
+func GetOCConfigMap(configMapName string) ([]byte, error) {
+	if TestOCConnection() {
+		// Get full pod name
+		cmd := "oc get configmap/" + configMapName + " -o yaml"
+		output, err := exec.Command("bash", "-c", cmd).Output()
+		if err != nil {
+			return output, err
+		}
+		return output, nil
+	}
+	return nil, fmt.Errorf("OC is not connected, you need to logged in before.")
+}
+
 func LoadServiceConfig(file string) ([]byte, error) {
 	serviceConfig, err := ioutil.ReadFile(file)
 	if err != nil {
