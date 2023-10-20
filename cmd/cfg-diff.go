@@ -24,7 +24,7 @@ import (
 
 // diff patch commands
 var service string
-var configMap string
+var configPatchFile string
 var configFile string
 var frompod bool
 var frompodman bool
@@ -44,20 +44,20 @@ var cfgDiffCmd = &cobra.Command{
 			if podname == "" {
 				panic("Please provide a pod name with --frompod option.")
 			}
-			servicecfg.DiffServiceConfigFromPod(service, configMap, configFile, podname)
+			servicecfg.DiffServiceConfigFromPod(service, configPatchFile, configFile, podname)
 		} else if frompodman {
 			if podname == "" {
 				panic("Please provide a pod name with --frompodman option.")
 			}
-			servicecfg.DiffServiceConfigFromPodman(service, configMap, configFile, podname)
+			servicecfg.DiffServiceConfigFromPodman(service, configPatchFile, configFile, podname)
 		} else {
-			servicecfg.DiffServiceConfig(service, configMap, configFile, false)
+			servicecfg.DiffServiceConfig(service, configPatchFile, configFile, false)
 		}
 	},
 }
 
 func init() {
-	cfgDiffCmd.Flags().StringVarP(&configMap, "configmap", "o", "", "OpenShift configmap patch file path.")
+	cfgDiffCmd.Flags().StringVarP(&configPatchFile, "configpatch", "o", "", "OpenShift configmap patch file path.")
 	cfgDiffCmd.Flags().StringVarP(&configFile, "configfile", "c", "", "OpenStack service INI config file path.")
 	cfgDiffCmd.Flags().StringVarP(&service, "service", "s", "", "OpenStack service, could be one of: Cinder, Glance...")
 	cfgDiffCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")

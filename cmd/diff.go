@@ -42,8 +42,8 @@ Example for two files:
 
 Example for remote diff:
 
-export CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
-export CMD2="oc exec glance-external-api-6cf6c98564-blggc -c glance-api --"
+CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
+CMD2="oc exec glance-external-api-6cf6c98564-blggc -c glance-api --"
 ./os-diff diff /etc/glance/glance-api.conf /etc/glance/glance.conf.d/00-config.conf --file1-cmd "$CMD1" --file2-cmd "$CMD2" --remote
 
 Example for directories:
