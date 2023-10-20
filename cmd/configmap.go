@@ -33,14 +33,14 @@ var cfgMapDiffCmd = &cobra.Command{
 	Use:   "cfgmap-diff",
 	Short: "Print diff between OpenShift configmap and an OpenStack config file",
 	Long: `Print diff from OpenShift configmap and an OpenStack  config file.
-		For example:
-		./os-diff cfgmap-diff --configmap keystone-config-data --config /tmp/collect_tripleo_configs/keystone/etc/keystone
-		or
-		from a configmap file:
-		./os-diff cfgmap-diff --configmap keystone-config-data.yaml --config /tmp/collect_tripleo_configs/keystone/etc/keystone
-		or
-		CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
-		./os-diff cfgmap-diff --configmap keystone-config-data --config /etc/keystone --remote --remode-cmd $CMD`,
+For example:
+./os-diff cfgmap-diff --configmap keystone-config-data --config /tmp/collect_tripleo_configs/keystone/etc/keystone
+or
+from a configmap file:
+./os-diff cfgmap-diff --configmap keystone-config-data.yaml --config /tmp/collect_tripleo_configs/keystone/etc/keystone
+or
+CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
+./os-diff cfgmap-diff --configmap keystone-config-data --config /etc/keystone --remote --remode-cmd $CMD`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if fromRemote {
 			if remoteCmd == "" {
@@ -59,6 +59,6 @@ func init() {
 	cfgMapDiffCmd.Flags().StringVarP(&configMap, "configmap", "m", "", "OpenShift configmap: oc get configmap/<name>")
 	cfgMapDiffCmd.Flags().StringVarP(&configPath, "config", "c", "", "OpenStack service INI config file path.")
 	cfgMapDiffCmd.Flags().BoolVar(&fromRemote, "remote", false, "Get Tripleo config remotely.")
-	cfgMapDiffCmd.Flags().StringVarP(&remoteCmd, "remote-cmd", "", "", "Remote command for pulling Tripleo config.")
+	cfgMapDiffCmd.Flags().StringVarP(&remoteCmd, "remote-cmd", "", "", "Remote Ssh command for pulling Tripleo config.")
 	rootCmd.AddCommand(cfgMapDiffCmd)
 }

@@ -364,7 +364,7 @@ func CompareRawData(rawdata1 []byte, rawdata2 []byte, origin string, dest string
 
 func GetConfigFromRemote(remoteCmd string, configPath string) ([]byte, error) {
 
-	fullCmd := remoteCmd + "cat" + " " + configPath
+	fullCmd := remoteCmd + " cat" + " " + configPath
 	remoteArray := strings.Split(fullCmd, " ")
 	cmd := exec.Command(remoteArray[0], remoteArray[1:]...)
 	out, err := cmd.CombinedOutput()
