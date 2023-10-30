@@ -143,18 +143,38 @@ func DiffServiceConfigFromPodman(service string, ocpConfig string, serviceConfig
 }
 
 func GenerateConfigPatchFromIni(serviceName string, configFile string, outputFile string, serviceEnable bool) error {
-	// Service structure
-	parentStruct := ParentStruct{}
-	configStruct := SimpleServiceStruct{}
-
 	config, err := os.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
+	return GenerateConfigPatch(serviceName, config, outputFile, serviceEnable)
+}
+
+func GenerateConfigPatchFromRemote(serviceName string, configFile string, outputFile string, serviceEnable bool, podname string) error {
+	// Get service Config
+	osConfig, err := GetConfigFromPodman(configFile, podname)
+	if err != nil {
+		panic(err)
+	}
+	return GenerateConfigPatch(serviceName, osConfig, outputFile, serviceEnable)
+}
+
+func GenerateConfigPatch(serviceName string, config []byte, outputFile string, serviceEnable bool) error {
+	configStr := strings.Split(string(config), "\n")
+	var configClean []string
+	for _, line := range configStr {
+		if !strings.HasPrefix(line, "#") && len(line) > 0 && (strings.Contains(line, "=") || strings.HasPrefix(line, "[")) {
+			configClean = append(configClean, line)
+		}
+	}
+	// Service structure
+	parentStruct := ParentStruct{}
+	configStruct := SimpleServiceStruct{}
+
 	service := configStruct[serviceName]
 
 	service.Enabled = serviceEnable
-	service.Template.CustomServiceConfig = string(config)
+	service.Template.CustomServiceConfig = string(strings.Join(configClean[:], "\n"))
 	configStruct[serviceName] = service
 
 	parentStruct.Spec = configStruct

@@ -27,6 +27,8 @@ var serviceName string
 var configFileName string
 var outputFile string
 var serviceEnable bool
+var pullRemote bool
+var podmanContainerName string
 
 var generateCmd = &cobra.Command{
 	Use:   "gen",
@@ -34,9 +36,13 @@ var generateCmd = &cobra.Command{
 	Long: `Config helpers, generate config patch a config file, example:
 	./os-diff gen --service glance --config my-conf.ini --output glance.patch`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := servicecfg.GenerateConfigPatchFromIni(serviceName, configFileName, outputFile, serviceEnable)
-		if err != nil {
-			panic(err)
+		if pullRemote {
+			servicecfg.GenerateConfigPatchFromRemote(serviceName, configFileName, outputFile, serviceEnable, podmanContainerName)
+		} else {
+			err := servicecfg.GenerateConfigPatchFromIni(serviceName, configFileName, outputFile, serviceEnable)
+			if err != nil {
+				panic(err)
+			}
 		}
 	},
 }
@@ -46,5 +52,7 @@ func init() {
 	generateCmd.Flags().StringVarP(&configFileName, "config", "c", "", "Configuration file from which you want to generate config patch.")
 	generateCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file name for the config patch.")
 	generateCmd.Flags().BoolVar(&serviceEnable, "enable", false, "Enable the service.")
+	generateCmd.Flags().BoolVar(&pullRemote, "remote", false, "Cat config file from a remote podman container.")
+	generateCmd.Flags().StringVarP(&podmanContainerName, "container-id", "i", "", "Podman container id.")
 	rootCmd.AddCommand(generateCmd)
 }
