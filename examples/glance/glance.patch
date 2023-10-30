@@ -3,7 +3,6 @@ spec:
     enabled: true
     template:
       databaseInstance: openstack
-      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
       customServiceConfig: |
         [DEFAULT]
         enabled_backends=default_backend:rbd
@@ -17,28 +16,17 @@ spec:
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        externalEndpoints:
-        - endpoint: internal
-          ipAddressPool: internalapi
-          loadBalancerIPs:
-          - 172.17.0.80
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+            spec:
+              type: LoadBalancer
         networkAttachments:
         - storage
       glanceAPIExternal:
         networkAttachments:
         - storage
-  extraMounts:
-    - extraVol:
-      - propagation:
-        - Glance
-        extraVolType: Ceph
-        volumes:
-        - name: ceph
-          projected:
-            sources:
-            - secret:
-                name: ceph-conf-files
-        mounts:
-        - name: ceph
-          mountPath: "/etc/ceph"
-          readOnly: true

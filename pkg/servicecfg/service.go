@@ -54,7 +54,7 @@ func DiffServiceConfig(service string, ocpConfig string, serviceConfig string, s
 		panic(err)
 	}
 
-	_, err = CompareIniConfig([]byte(servicePatch), osConfig, ocpConfig, serviceConfig)
+	_, err = CompareIniConfig(osConfig, []byte(servicePatch), serviceConfig, ocpConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig st
 		panic(err)
 	}
 
-	_, err = CompareIniConfig([]byte(servicePatch), podConfig, ocpConfig, serviceConfig)
+	_, err = CompareIniConfig(podConfig, []byte(servicePatch), serviceConfig, ocpConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +116,7 @@ func DiffServiceConfigFromPodman(service string, ocpConfig string, serviceConfig
 		panic(err)
 	}
 
-	_, err = CompareIniConfig([]byte(servicePatch), osConfig, ocpConfig, serviceConfig)
+	_, err = CompareIniConfig(osConfig, []byte(servicePatch), serviceConfig, ocpConfig)
 	if err != nil {
 		panic(err)
 	}
