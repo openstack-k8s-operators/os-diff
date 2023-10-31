@@ -80,7 +80,7 @@ func GenerateOpenShiftConfig(outputConfigPath string, serviceConfigPath string) 
 
 func GetPodFullName(podName string) (string, error) {
 	// Get full pod name
-	cmd := "oc get pod | grep " + podName + " | cut -f 1 -d' '"
+	cmd := "oc get pod | grep " + podName + " | grep -i running | cut -f 1 -d' '"
 	output, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
 		return string(output), err
