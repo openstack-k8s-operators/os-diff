@@ -46,6 +46,10 @@ CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
 CMD2="oc exec glance-external-api-6cf6c98564-blggc -c glance-api --"
 ./os-diff diff /etc/glance/glance-api.conf /etc/glance/glance.conf.d/00-config.conf --file1-cmd "$CMD1" --file2-cmd "$CMD2" --remote
 
+OR, here only file 1 is remote:
+CMD1=oc exec -t neutron-cd94d8ccb-vq2gk -c neutron-api --
+./os-diff diff /etc/neutron/neutron.conf /tmp/collect_tripleo_configs/neutron/etc/neutron/neutron.conf --file1-cmd="$CMD1" --remote
+
 Example for directories:
 
 ./os-diff diff tests/podman-containers/ tests/ocp-pods/
@@ -58,33 +62,31 @@ Example for directories:
 		}
 		path1 := args[0]
 		path2 := args[1]
-
-		fi1, err := os.Stat(path1)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fi2, err := os.Stat(path2)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if fi1.IsDir() || fi2.IsDir() || quiet {
-			goDiff := &godiff.GoDiffDataStruct{
-				Origin:      path1,
-				Destination: path2,
-			}
-			err := goDiff.ProcessDirectories(false)
+		if remote {
+			godiff.CompareFilesFromRemote(path1, path2, file1Cmd, file2Cmd, debug)
+		} else {
+			fi1, err := os.Stat(path1)
 			if err != nil {
+				fmt.Println(err)
 				return
 			}
-		} else {
-			if remote {
-				godiff.CompareFilesFromRemote(path1, path2, file1Cmd, file2Cmd, debug)
+			fi2, err := os.Stat(path2)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			if fi1.IsDir() || fi2.IsDir() || quiet {
+				goDiff := &godiff.GoDiffDataStruct{
+					Origin:      path1,
+					Destination: path2,
+				}
+				err := goDiff.ProcessDirectories(false)
+				if err != nil {
+					return
+				}
 			} else {
 				godiff.CompareFiles(path1, path2, true, debug)
 			}
-
 		}
 	},
 }
