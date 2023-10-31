@@ -93,7 +93,7 @@ Example for directories:
 
 func init() {
 	diffCmd.Flags().StringVarP(&file1Cmd, "file1-cmd", "", "", "Remote command for the file1 configuration file.")
-	diffCmd.Flags().StringVarP(&file1Cmd, "file2-cmd", "", "", "Remote command for the file2 configuration file.")
+	diffCmd.Flags().StringVarP(&file2Cmd, "file2-cmd", "", "", "Remote command for the file2 configuration file.")
 	diffCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug.")
 	diffCmd.Flags().BoolVar(&quiet, "quiet", false, "Do not print difference on the console and use logs report, only for files comparison")
 	diffCmd.Flags().BoolVar(&remote, "remote", false, "Run the diff remotely.")
