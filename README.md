@@ -122,7 +122,7 @@ The log INFO/WARN and ERROR will be print to the console as well so you can have
 Run the compare command:
 
 ```
-./os-diff compare --origin=/tmp/collect_tripleo_configs --destination=/tmp/collect_crc_configs
+./os-diff diff /tmp/collect_tripleo_configs /tmp/collect_crc_configs
 
 ```
 
@@ -132,7 +132,7 @@ diff command compare file to file only and ouput a diff with color on the consol
 Example for Yaml file:
 
 ```diff
-./os-diff diff -o tests/podman/key.yaml -d tests/ocp/key.yaml
+./os-diff diff tests/podman/key.yaml tests/ocp/key.yaml
 Source file path: tests/podman/key.yaml, difference with: tests/ocp/key.yaml
 @@ line: 8
 +    pod_name: foo
@@ -143,7 +143,7 @@ Source file path: tests/podman/key.yaml, difference with: tests/ocp/key.yaml
 Example for ini config file:
 
 ```diff
- ./os-diff diff -o /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf -d /tmp/collect_tripleo_configs/keystone/etc/keystone/keystone.conf
+ ./os-diff diff /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf /tmp/collect_tripleo_configs/keystone/etc/keystone/keystone.conf
 Source file path: /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf, difference with: /tmp/collect_tripleo_configs/keystone/etc/keystone/keystone.conf
 [DEFAULT]
 -use_stderr=true
@@ -201,7 +201,7 @@ spec:
 Run service command:
 
 ```service
-./os-diff service -s glance -o examples/glance/glance.patch -c /tmp/glance.conf
+./os-diff cdiff -s glance -o examples/glance/glance.patch -c /tmp/glance.conf
 Source file path: examples/glance/glance.patch, difference with: /tmp/glance.conf
 -enabled_backends=default_backend:rbd
 -[glance_store]
@@ -216,7 +216,7 @@ Source file path: examples/glance/glance.patch, difference with: /tmp/glance.con
 Run comparison against the deployed pod:
 
 ```service
-./os-diff service -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf \
+./os-diff cdiff -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf \
 --frompod -p glance-external-api-678c6c79d7-24t7t
 
 Source file path: examples/glance/glance.patch, difference with: /etc/glance/glance-api.conf
@@ -284,7 +284,7 @@ func LoadYourServiceNameOpenShiftConfig(configPath string) string {
 
 ### Asciinema demo
 
-https://asciinema.org/a/JCgHLNHYC5DRVibJQK2YbCTSf
+https://asciinema.org/a/618124
 
 ### TODO
 
