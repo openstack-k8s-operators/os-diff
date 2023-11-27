@@ -1,8 +1,0 @@
----
-- name: Collect Podman config
-  hosts: standalone
-  gather_facts: yes
-  vars:
-    - collect_podman: true
-  roles:
-    - collect_config

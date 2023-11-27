@@ -17,10 +17,15 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"os-diff/pkg/common"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+var osDiffConfig string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -52,4 +57,25 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Initialize the config and bind it to the root command
+	err := initConfig(rootCmd)
+	if err != nil {
+		fmt.Println("Error initializing config:", err)
+		return
+	}
+}
+
+func initConfig(cmd *cobra.Command) error {
+
+	// Bind the loaded config to a persistent flag
+	cmd.PersistentFlags().StringVarP(&osDiffConfig, "config", "c", "os-diff.cfg", "Config file (default is $PWD/config.ini)")
+	viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
+	config, err := common.LoadOSDiffConfig(osDiffConfig)
+	if err != nil {
+		return err
+	}
+	// Store the loaded config in Viper for access from within the command
+	viper.Set("config", config)
+
+	return nil
 }

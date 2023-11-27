@@ -14,36 +14,36 @@
  * Copyright 2023 Red Hat, Inc.
  *
  */
-package ansible
+
+package common
 
 import (
-	"encoding/json"
-	"errors"
-	"io/ioutil"
+	"os/exec"
+	"strings"
 )
 
-func LoadJSONFile(f string, object interface{}) error {
-	file, err := ioutil.ReadFile(f)
-
+// Shell execution functions:
+func ExecCmd(cmd string) ([]string, error) {
+	output, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 	if err != nil {
-		return errors.New("(LoadJSONFile) Error on loading file '" + f + "'. " + err.Error())
+		return strings.Split(string(output), "\n"), err
 	}
-	err = json.Unmarshal(file, object)
-	if err != nil {
-		return errors.New("(LoadJSONFile) Error on " + f + " unmarshaling. " + err.Error())
-	}
-
-	return nil
+	return strings.Split(string(output), "\n"), nil
 }
 
-func ObjectToJSONString(object interface{}) (string, error) {
-	var jsoned []byte
-	var err error
-
-	jsoned, err = json.Marshal(object)
+func ExecCmdSimple(cmd string) (string, error) {
+	output, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 	if err != nil {
-		return err.Error(), err
+		return string(output), err
 	}
+	return string(output), nil
+}
 
-	return string(jsoned), nil
+func TestOCConnection() bool {
+	cmd := "oc whoami"
+	_, err := ExecCmd(cmd)
+	if err != nil {
+		return false
+	}
+	return true
 }
