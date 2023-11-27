@@ -24,7 +24,7 @@ import (
 
 // Shell execution functions:
 func ExecCmd(cmd string) ([]string, error) {
-	output, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+	output, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
 		return strings.Split(string(output), "\n"), err
 	}
