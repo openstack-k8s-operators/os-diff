@@ -47,3 +47,12 @@ func TestOCConnection() bool {
 	}
 	return true
 }
+
+func TestSshConnection(sshCmd string) bool {
+	cmd := sshCmd + " ls"
+	_, err := ExecCmd(cmd)
+	if err != nil {
+		return false
+	}
+	return true
+}
