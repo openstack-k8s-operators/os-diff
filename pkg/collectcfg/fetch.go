@@ -70,14 +70,22 @@ func PullConfigs(configDir string, podman bool, sshCmd string) error {
 func PullConfig(serviceName string, podman bool, configDir string, sshCmd string) error {
 	if podman {
 		podmanId, _ := GetPodmanId(config.Services[serviceName].PodmanName, sshCmd)
-		for _, path := range config.Services[serviceName].Path {
-			dirPath := getDir(strings.TrimRight(path, "/"))
-			PullPodmanFiles(podmanId, path, configDir+"/"+serviceName+"/"+dirPath, sshCmd)
+		if len(strings.TrimSpace(podmanId)) > 0 {
+			for _, path := range config.Services[serviceName].Path {
+				dirPath := getDir(strings.TrimRight(path, "/"))
+				PullPodmanFiles(podmanId, path, configDir+"/"+serviceName+"/"+dirPath, sshCmd)
+			}
+		} else {
+			fmt.Println("Error, Podman name not found, skipping ..." + config.Services[serviceName].PodmanName)
 		}
 	} else {
 		podId, _ := GetPodId(config.Services[serviceName].PodName)
-		for _, path := range config.Services[serviceName].Path {
-			PullPodFiles(podId, config.Services[serviceName].ContainerName, path, configDir+"/"+serviceName+"/"+path)
+		if len(strings.TrimSpace(podId)) > 0 {
+			for _, path := range config.Services[serviceName].Path {
+				PullPodFiles(podId, config.Services[serviceName].ContainerName, path, configDir+"/"+serviceName+"/"+path)
+			}
+		} else {
+			fmt.Println("Error, Pod name not found, skipping ..." + config.Services[serviceName].PodName)
 		}
 	}
 	return nil
