@@ -5,10 +5,6 @@ BINARY_NAME=os-diff
 build:
 	go build -o ${BINARY_NAME} main.go
 
-# install
-install:
-	ansible-galaxy install -r ansible-requirements.yml
-
 # run
 run: build
 	./${BINARY_NAME}

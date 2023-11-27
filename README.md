@@ -11,26 +11,19 @@ OpenStack to OpenStack on OpenShift migration.
 #### Pull configuration step
 
 Before running the Pull command you need to configure the ssh access to your environements (OpenStack and OCP).
-Edit the ssh.config provided with this project and make sure you can ssh on your hosts with the command:
+Edit os-diff.cfg and/or the ssh.config provided with this project and make sure you can ssh on your hosts 
+without password or host key verification, with the command:
 
 ```
 ssh -F ssh.config crc
 ssh -F ssh.config standalone
 ```
 
-Also you need to provide the full path of your ssh.config in the ansible.cfg file, example:
+When everything is setup correctly you can tweak the config.yaml file at the root of the project which contain the description
+of the services you want to extract configurations:
 
 ```
-ssh_args = -F /home/foo/os-diff/ssh.config
-```
-
-When everything is setup correctly you can tweak the ansible vars for each services you want to analyze:
-
-```
-  ▾ roles/
-    ▾ collect_config/
-      ▾ vars/
-        main.yml
+  config.yaml
 ```
 
 You can add your own service according to the following:
@@ -44,61 +37,34 @@ You can add your own service according to the following:
     # It could be strict match with strict_pod_name_match set to true
     # or by default it will just grep the podman and work with all the pods
     # which matched with pod_name.
+    podman_name: keystone
     pod_name: keystone
+    container_name: keystone-api
     # Path of the config files you want to analyze.
     # It could be whatever path you want:
     # /etc/<service_name> or /etc or /usr/share/<something> or even /
     # @TODO: need to implement loop over path to support multiple paths such as:
     # - /etc
     # - /usr/share
-    path: /etc/keystone
-    # In podman context, when you want to pull specific files:
-    # You need to set pull_items to true
-    name:
-      - keystone.conf
-      - logging.conf
-```
-
-An Ansible hosts file is provided at the root of this repository and the
-ansible.cfg.
-You might want to edit the hosts file to stick to your environment.
-Those file are required for collecting the configuration files from
-the pods or the containers (OCP and Podman).
-
-```
-  ▾ playbooks/
-      collect_ocp_config.yaml
-      collect_podman_config.yaml
-```
-
-Those playbooks can call with the Go binary or directly with Ansible.
-It call one Ansible role:
-
-```
-  ▾ roles/
-    ▾ collect_config/
-      ▾ tasks/
-        collect_ocp.yml
-        collect_podman.yml
-        main.yml
+    path:
+      - /etc/
+      - /etc/keystone
+      - /etc/keystone/keystone.conf
+      - /etc/keystone/logging.conf
 ```
 
 Once everything is correctly setup you can start to pull configuration:
 
-
 ```
-# install dependencies
-make install
 # build os-diff
 make build
 # run pull configuration for TripleO standalone:
-./os-diff pull --cloud_engine=podman --inventory=$PWD/hosts
-# run pull configuration for OCP:
-./os-diff pull --cloud_engine=ocp --inventory=$PWD/hosts
-
-# You can also use the playbooks directly:
-ansible-playbook -i hosts playbooks/collect_ocp_config.yaml
+./os-diff pull --env=tripleo
+# run pull configuration for OCP with a specific output directory and a specific service config file:
+./os-diff pull -e ocp -o /tmp/myconfigdir -s my-service-config-file
 ```
+
+Note: The CLI arguments take precedence on the configuration file values.
 
 #### Compare configuration files steps
 

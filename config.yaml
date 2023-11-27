@@ -1,0 +1,27 @@
+# service name and file location
+services:
+  # Service name
+  keystone:
+    # Bool to enable/disable a service (not implemented yet)
+    enable: true
+    # Pod name, in both OCP and podman context.
+    # It could be strict match or will only just grep the podman_name
+    # and work with all the pods which matched with pod_name.
+    # To enable/disable use strict_pod_name_match: true/false
+    podman_name: keystone
+    pod_name: keystone
+    container_name: keystone-api
+    # pod options
+    # strict match for getting pod id in TripleO and podman context
+    strict_pod_name_match: false
+    # Path of the config files you want to analyze.
+    # It could be whatever path you want:
+    # /etc/<service_name> or /etc or /usr/share/<something> or even /
+    # @TODO: need to implement loop over path to support multiple paths such as:
+    # - /etc
+    # - /usr/share
+    path:
+      - /etc/
+      - /etc/keystone
+      - /etc/keystone/keystone.conf
+      - /etc/keystone/logging.conf

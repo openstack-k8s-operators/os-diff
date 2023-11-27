@@ -17,64 +17,64 @@
 package cmd
 
 import (
-	"os-diff/pkg/ansible"
+	"fmt"
+	"os-diff/pkg/collectcfg"
+	"os-diff/pkg/common"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-var inventory string
-var cloud_engine string
+var cloud string
 var output_dir string
-var play string
 var verbose bool
-var extraVars map[string]string
+var serviceConfig string
 
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pull configurations from Podman or OCP",
 	Long: `This command pulls configuration files by services from Podman
-	environment or OCP. For example:
-    os-diff pull --cloud_engine=ocp --inventory=$PWD/hosts --output-dir=/tmp`,
+environment or OCP. For example:
+./os-diff pull --env=tripleo
+You can set configuration in your os-diff.cfg or provide output directory via the command line:
+./os-diff pull -e ocp -o /tmp/myconfigdir`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		ansiblePlaybookConnectionOptions := &ansible.AnsiblePlaybookConnectionOptions{
-			Connection: "local",
+		// Get config:
+		config := viper.Get("config").(*common.ODConfig)
+		if serviceConfig == "" {
+			serviceConfig = config.Default.ServiceConfigFile
 		}
 
-		extraVarsMap := make(map[string]interface{})
-		for key, value := range extraVars {
-			extraVarsMap[key] = value
-		}
-		ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
-			Inventory: inventory,
-			Verbosity: verbose,
-			ExtraVars: extraVarsMap,
-		}
-
-		if cloud_engine == "ocp" {
-			play = "playbooks/collect_ocp_config.yaml"
+		if cloud == "ocp" {
+			// OCP Settings
+			localOCPDir := config.Openshift.OcpLocalConfigPath
+			err := collectcfg.FetchConfigFromEnv(serviceConfig, localOCPDir, "", false, config.Openshift.Connection, "")
+			if err != nil {
+				fmt.Println("Error while collecting config: ", err)
+				return
+			}
+		} else if cloud == "tripleo" {
+			// TRIPLEO Settings:
+			standaloneSsh := config.Tripleo.SshCmd
+			remoteConfigDir := config.Tripleo.RemoteConfigPath
+			localConfigDir := config.Default.LocalConfigDir
+			err := collectcfg.FetchConfigFromEnv(serviceConfig, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, standaloneSsh)
+			if err != nil {
+				fmt.Println("Error while collecting config: ", err)
+				return
+			}
 		} else {
-			play = "playbooks/collect_podman_config.yaml"
-		}
-
-		playbook := &ansible.AnsiblePlaybookCmd{
-			Playbook:          play,
-			ConnectionOptions: ansiblePlaybookConnectionOptions,
-			Options:           ansiblePlaybookOptions,
-		}
-
-		err := playbook.Run()
-		if err != nil {
-			panic(err)
+			fmt.Println("Error unkown cloud", cloud)
+			return
 		}
 	},
 }
 
 func init() {
-	pullCmd.Flags().StringVarP(&inventory, "inventory", "i", "hosts", "Ansible inventory hosts file.")
-	pullCmd.Flags().StringVarP(&cloud_engine, "cloud_engine", "c", "ocp", "Service engine, could be: ocp or podman.")
-	pullCmd.Flags().StringVar(&output_dir, "output_dir", "/tmp", "Output directory for the configuration files.")
+	pullCmd.Flags().StringVarP(&cloud, "env", "e", "tripleo", "Service engine, could be: ocp or tripleo.")
+	pullCmd.Flags().StringVarP(&output_dir, "output_dir", "o", "", "Output directory for the configuration files.")
+	pullCmd.Flags().StringVarP(&serviceConfig, "service_config", "s", "", "File where the service configurations are describe.")
 	pullCmd.Flags().BoolVar(&verbose, "verbose", false, "Enable Ansible verbosity.")
-	pullCmd.Flags().StringToStringVarP(&extraVars, "extra-vars", "e", nil, "Ansible extra vars")
 	rootCmd.AddCommand(pullCmd)
 }
