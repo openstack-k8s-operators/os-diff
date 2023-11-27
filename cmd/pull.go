@@ -37,7 +37,7 @@ var pullCmd = &cobra.Command{
 environment or OCP. For example:
 ./os-diff pull --env=tripleo
 You can set configuration in your os-diff.cfg or provide output directory via the command line:
-./os-diff pull -e ocp -o /tmp/myconfigdir`,
+./os-diff pull -e ocp -o /tmp/myconfigdir -s my-service-config-file`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Get config:
@@ -47,6 +47,11 @@ You can set configuration in your os-diff.cfg or provide output directory via th
 		}
 
 		if cloud == "ocp" {
+			// Test OCP connection:
+			if !common.TestOCConnection() {
+				fmt.Println("OC not connected, you need to logged in before running this command...")
+				return
+			}
 			// OCP Settings
 			localOCPDir := config.Openshift.OcpLocalConfigPath
 			err := collectcfg.FetchConfigFromEnv(serviceConfig, localOCPDir, "", false, config.Openshift.Connection, "")
@@ -59,6 +64,10 @@ You can set configuration in your os-diff.cfg or provide output directory via th
 			standaloneSsh := config.Tripleo.SshCmd
 			remoteConfigDir := config.Tripleo.RemoteConfigPath
 			localConfigDir := config.Default.LocalConfigDir
+			if !common.TestSshConnection(standaloneSsh) {
+				fmt.Println("Please check your SSH configuration: " + standaloneSsh)
+				return
+			}
 			err := collectcfg.FetchConfigFromEnv(serviceConfig, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, standaloneSsh)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
