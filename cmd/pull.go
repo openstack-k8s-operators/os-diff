@@ -63,7 +63,7 @@ You can set configuration in your os-diff.cfg or provide output directory via th
 			// TRIPLEO Settings:
 			standaloneSsh := config.Tripleo.SshCmd
 			remoteConfigDir := config.Tripleo.RemoteConfigPath
-			localConfigDir := config.Default.LocalConfigDir
+			localConfigDir := config.Tripleo.LocalConfigPath
 			if !common.TestSshConnection(standaloneSsh) {
 				fmt.Println("Please check your SSH configuration: " + standaloneSsh)
 				return
