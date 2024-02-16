@@ -92,7 +92,7 @@ func PullConfig(serviceName string, podman bool, configDir string, sshCmd string
 }
 
 func GetPodmanId(containerName string, sshCmd string) (string, error) {
-	cmd := sshCmd + " podman ps | grep Up | awk '/" + containerName + "$/  {print $1}'"
+	cmd := sshCmd + " podman ps -a | awk '/" + containerName + "$/  {print $1}'"
 	output, err := common.ExecCmd(cmd)
 	return output[0], err
 }
