@@ -18,9 +18,11 @@
 package collectcfg
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os-diff/pkg/common"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -32,6 +34,8 @@ var config Config
 // Service YAML Config Structure
 type Service struct {
 	Enable             bool     `yaml:"enable"`
+	PodmanId           string   `yaml:"podman_id"`
+	PodmanImage        string   `yaml:"podman_image"`
 	PodmanName         string   `yaml:"podman_name"`
 	PodName            string   `yaml:"pod_name"`
 	ContainerName      string   `yaml:"container_name"`
@@ -41,6 +45,13 @@ type Service struct {
 
 type Config struct {
 	Services map[string]Service `yaml:"services"`
+}
+
+// TripleO information structures:
+type PodmanContainer struct {
+	Image string   `json:"Image"`
+	ID    string   `json:"ID"`
+	Names []string `json:"Names"`
 }
 
 func LoadServiceConfig(configPath string) error {
@@ -60,8 +71,22 @@ func LoadServiceConfig(configPath string) error {
 	return nil
 }
 
+func dumpConfigFile(configPath string) error {
+	// Write updated data to config.yaml file
+	yamlData, err := yaml.Marshal(&config)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(configPath, yamlData, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func PullConfigs(configDir string, podman bool, sshCmd string) error {
-	for service, _ := range config.Services {
+	for service := range config.Services {
 		PullConfig(service, podman, configDir, sshCmd)
 	}
 	return nil
@@ -69,7 +94,12 @@ func PullConfigs(configDir string, podman bool, sshCmd string) error {
 
 func PullConfig(serviceName string, podman bool, configDir string, sshCmd string) error {
 	if podman {
-		podmanId, _ := GetPodmanId(config.Services[serviceName].PodmanName, sshCmd)
+		var podmanId string
+		if config.Services[serviceName].PodmanId != "" {
+			podmanId = config.Services[serviceName].PodmanId
+		} else {
+			podmanId, _ = GetPodmanId(config.Services[serviceName].PodmanName, sshCmd)
+		}
 		if len(strings.TrimSpace(podmanId)) > 0 {
 			for _, path := range config.Services[serviceName].Path {
 				dirPath := getDir(strings.TrimRight(path, "/"))
@@ -89,6 +119,17 @@ func PullConfig(serviceName string, podman bool, configDir string, sshCmd string
 		}
 	}
 	return nil
+}
+
+func GetPodmanIds(sshCmd string, all bool) ([]byte, error) {
+	var cmd string
+	if all {
+		cmd = sshCmd + " podman ps -a --format json"
+	} else {
+		cmd = sshCmd + " podman ps --format json"
+	}
+	output, err := exec.Command("bash", "-c", cmd).Output()
+	return output, err
 }
 
 func GetPodmanId(containerName string, sshCmd string) (string, error) {
@@ -185,6 +226,59 @@ func FetchConfigFromEnv(configPath string,
 		PullConfigs(remoteDir, podman, sshCmd)
 		SyncConfigDir(localDir, remoteDir, sshCmd)
 		CleanUp(remoteDir, sshCmd)
+	}
+	return nil
+}
+
+func SetTripleODataEnv(configPath string, sshCmd string, filters []string, all bool) error {
+	// Get Podman informations:
+	output, err := GetPodmanIds(sshCmd, all)
+	if err != nil {
+		return err
+	}
+	filterMap := make(map[string]struct{})
+	for _, filter := range filters {
+		filterMap[filter] = struct{}{}
+	}
+	var containers []PodmanContainer
+	err = json.Unmarshal(output, &containers)
+	if err != nil {
+		fmt.Println("Error parsing JSON:", err)
+		return err
+	}
+
+	data := make(map[string]map[string]string)
+	for _, container := range containers {
+		for _, name := range container.Names {
+			if _, ok := filterMap[name]; ok {
+				data[name] = map[string]string{
+					"containerid": container.ID[:12],
+					"image":       container.Image,
+				}
+			}
+		}
+	}
+	// Load config.yaml
+	err = LoadServiceConfig(configPath)
+	if err != nil {
+		return err
+	}
+	// Update or add data to config
+	for name, info := range data {
+		if _, ok := config.Services[name]; !ok {
+			config.Services[name] = Service{}
+		}
+		if entry, ok := config.Services[name]; ok {
+			entry.PodmanId = info["containerid"]
+			entry.PodmanImage = info["image"]
+			entry.PodmanName = name
+			config.Services[name] = entry
+		}
+	}
+
+	err = dumpConfigFile(configPath)
+	if err != nil {
+		return err
 	}
 	return nil
 }
