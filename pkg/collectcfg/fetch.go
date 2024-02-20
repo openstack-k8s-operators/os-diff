@@ -230,23 +230,17 @@ func FetchConfigFromEnv(configPath string,
 	return nil
 }
 
-func SetTripleODataEnv(configPath string, sshCmd string, filters []string, all bool) error {
-	// Get Podman informations:
-	output, err := GetPodmanIds(sshCmd, all)
-	if err != nil {
-		return err
-	}
+func buildPodmanInfo(output []byte, filters []string) (map[string]map[string]string, error) {
 	filterMap := make(map[string]struct{})
 	for _, filter := range filters {
 		filterMap[filter] = struct{}{}
 	}
 	var containers []PodmanContainer
-	err = json.Unmarshal(output, &containers)
+	err := json.Unmarshal(output, &containers)
 	if err != nil {
 		fmt.Println("Error parsing JSON:", err)
-		return err
+		return nil, err
 	}
-
 	data := make(map[string]map[string]string)
 	for _, container := range containers {
 		for _, name := range container.Names {
@@ -258,6 +252,16 @@ func SetTripleODataEnv(configPath string, sshCmd string, filters []string, all b
 			}
 		}
 	}
+	return data, nil
+}
+
+func SetTripleODataEnv(configPath string, sshCmd string, filters []string, all bool) error {
+	// Get Podman informations:
+	output, err := GetPodmanIds(sshCmd, all)
+	if err != nil {
+		return err
+	}
+	data, _ := buildPodmanInfo(output, filters)
 	// Load config.yaml
 	err = LoadServiceConfig(configPath)
 	if err != nil {
