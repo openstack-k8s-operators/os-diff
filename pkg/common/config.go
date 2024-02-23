@@ -34,6 +34,7 @@ type ODConfig struct {
 
 	Tripleo struct {
 		SshCmd           string `ini:"ssh_cmd"`
+		DirectorHost     string `ini:"director_host"`
 		ContainerEngine  string `ini:"container_engine"`
 		Connection       string `ini:"connection"`
 		RemoteConfigPath string `ini:"remote_config_path"`

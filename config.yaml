@@ -25,3 +25,10 @@ services:
       - /etc/keystone
       - /etc/keystone/keystone.conf
       - /etc/keystone/logging.conf
+  ovs_db:
+    hosts:
+      - standalone
+    service_command: ovs-vsctl list Open_vSwitch .
+    cat_output: true
+    path:
+      - ovs_db.output
