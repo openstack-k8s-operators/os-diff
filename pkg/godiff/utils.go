@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/go-ini/ini"
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 func stringInSlice(a string, list []string) bool {
