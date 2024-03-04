@@ -1,4 +1,4 @@
-module os-diff
+module github.com/openstack-k8s-operators/os-diff
 
 go 1.19
 

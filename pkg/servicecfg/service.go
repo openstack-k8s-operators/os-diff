@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os-diff/pkg/godiff"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"path/filepath"
 	"strings"
 

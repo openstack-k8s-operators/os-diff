@@ -19,7 +19,7 @@ package servicecfg
 import (
 	"fmt"
 	"io/ioutil"
-	"os-diff/pkg/godiff"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"os/exec"
 	"strings"
 )

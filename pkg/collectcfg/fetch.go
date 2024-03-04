@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os-diff/pkg/common"
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"os/exec"
 	"path"
 	"strings"
