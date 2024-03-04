@@ -19,7 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os-diff/pkg/common"
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

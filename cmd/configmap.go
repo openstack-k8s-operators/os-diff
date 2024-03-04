@@ -18,7 +18,7 @@ package cmd
 
 import (
 	"fmt"
-	"os-diff/pkg/servicecfg"
+	"github.com/openstack-k8s-operators/os-diff/pkg/servicecfg"
 
 	"github.com/spf13/cobra"
 )

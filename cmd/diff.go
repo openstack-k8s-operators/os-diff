@@ -19,7 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os-diff/pkg/godiff"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 
 	"github.com/spf13/cobra"
 )

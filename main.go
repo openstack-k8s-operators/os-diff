@@ -16,7 +16,7 @@
  */
 package main
 
-import "os-diff/cmd"
+import "github.com/openstack-k8s-operators/os-diff/cmd"
 
 func main() {
 	cmd.Execute()
