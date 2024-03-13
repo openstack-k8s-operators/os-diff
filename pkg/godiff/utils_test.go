@@ -1,19 +1,20 @@
 package godiff
 
 import (
-	"testing"
 	"reflect"
+	"testing"
+
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"github.com/stretchr/testify/assert"
-	"github.com/your_module_path_here/godiff"
 )
 
 // Test case for function stringInSlice
 func TestStringInSlice(t *testing.T) {
 	testCases := []struct {
-		name       string
-		inputStr   string
-		inputList  []string
-		expected   bool
+		name      string
+		inputStr  string
+		inputList []string
+		expected  bool
 	}{
 		{"String in slice - positive case", "apple", []string{"apple", "banana", "cherry"}, true},
 		{"String not in slice - negative case", "pear", []string{"apple", "banana", "cherry"}, false},
@@ -335,7 +336,7 @@ func TestCompareRawData(t *testing.T) {
 
 // Test case for function GetConfigFromRemote
 func TestGetConfigFromRemote(t *testing.T) {
-	remoteCmd := "ssh user@hostname" // Change this according to the remote command
+	remoteCmd := "ssh user@hostname"     // Change this according to the remote command
 	configPath := "/path/to/config/file" // Change this according to the config file path
 
 	// Test case for successful execution
@@ -355,4 +356,3 @@ func TestGetConfigFromRemote(t *testing.T) {
 		}
 	})
 }
-
