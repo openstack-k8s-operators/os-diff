@@ -19,12 +19,33 @@ package servicecfg
 import (
 	"fmt"
 	"io/ioutil"
+<<<<<<< HEAD
+=======
+	"os"
+	"os-diff/pkg/godiff"
+>>>>>>> 2f61bfb (Add edpm service support)
 	"os/exec"
+	"reflect"
 	"strings"
+<<<<<<< HEAD
+=======
+
+	"gopkg.in/yaml.v2"
+)
+>>>>>>> 2f61bfb (Add edpm service support)
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 )
+
+func snakeToCamel(s string) string {
+	parts := strings.Split(s, "_")
+	var result string
+	for _, part := range parts {
+		result += strings.Title(part)
+	}
+	return result
+}
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
