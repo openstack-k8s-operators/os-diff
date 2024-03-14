@@ -25,10 +25,18 @@ services:
       - /etc/keystone
       - /etc/keystone/keystone.conf
       - /etc/keystone/logging.conf
-  ovs_db:
+  ovs_external_ids:
     hosts:
       - standalone
-    service_command: ovs-vsctl list Open_vSwitch .
+    service_command: "ovs-vsctl list Open  list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'"
     cat_output: true
     path:
-      - ovs_db.output
+      - ovs_external_ids.json
+    config_mapping:
+      ovn-bridge-mappings: edpm_ovn_bridge_mappings
+      ovn-bridge: edpm_ovn_bridge
+      ovn-encap-type: edpm_ovn_encap_type
+      ovn-match-northd-version: ovn_match_northd_version
+      ovn-monitor-all: ovn_monitor_all
+      ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
+      ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
