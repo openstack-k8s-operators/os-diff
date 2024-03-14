@@ -19,33 +19,13 @@ package servicecfg
 import (
 	"fmt"
 	"io/ioutil"
-	"os-diff/pkg/godiff"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
+
+	"gopkg.in/yaml.v3"
 )
-
-var config Config
-
-// Service YAML Config Structure
-type Service struct {
-	Enable             bool              `yaml:"enable"`
-	PodmanId           string            `yaml:"podman_id"`
-	PodmanImage        string            `yaml:"podman_image"`
-	PodmanName         string            `yaml:"podman_name"`
-	PodName            string            `yaml:"pod_name"`
-	ContainerName      string            `yaml:"container_name"`
-	StrictPodNameMatch bool              `yaml:"strict_pod_name_match"`
-	Path               []string          `yaml:"path"`
-	Hosts              []string          `yaml:"hosts"`
-	ServiceCommand     string            `yaml:"service_command"`
-	CatOutput          bool              `yaml:"cat_output"`
-	ConfigMapping      map[string]string `yaml:"config_mapping"`
-}
-
-type Config struct {
-	Services map[string]Service `yaml:"services"`
-}
 
 type OpenStackDataPlaneNodeSet struct {
 	APIVersion string `yaml:"apiVersion"`
@@ -129,29 +109,13 @@ type OpenStackDataPlaneNodeSet struct {
 	} `yaml:"spec"`
 }
 
-func LoadOpenStackDataPlaneNodeSetConfig(configPath string) string {
-	var sb strings.Builder
-	// Service structure
-	var service OpenStackDataPlaneNodeSet
-
-	yamlFile, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		panic(err)
-	}
-
-	err = yaml.Unmarshal(yamlFile, &service)
-	if err != nil {
-		panic(err)
-	}
-
-	return cleanIniSections(sb.String())
-}
-
-func DiffEdpmCrdFromFile(srcFile string, EdpmPath string, serviceName string) error {
+func DiffEdpmCrdFromFile(srcFile string, EdpmPath string, serviceName string, serviceCfgFile string) error {
 
 	var report []string
+	var config common.Config
 	// Load config file
-	LoadServiceConfigFile("config.yaml")
+	config, _ = common.LoadServiceConfigFile(serviceCfgFile)
+
 	//Load file
 	src, err := ioutil.ReadFile(srcFile)
 	if err != nil {
@@ -181,15 +145,18 @@ func DiffEdpmCrdFromFile(srcFile string, EdpmPath string, serviceName string) er
 	msg := fmt.Sprintf("Start to compare file contents for: %s and: %s \n", srcFile, EdpmPath)
 	report = append(report, msg)
 	//Compare File keys with Edpm according to mapping
-	if serviceName == "ovs_external_ids" {
-		for k, v := range config.Services[serviceName].ConfigMapping {
-			value := getNestedFieldValue(service.Spec.NodeTemplate.Ansible.AnsibleVars, snakeToCamel(v))
-			if srcMap[k] != ConvertToString(value) {
-				msg = fmt.Sprintf("-%s=%s\n", k, srcMap[k])
-				report = append(report, msg)
-				msg = fmt.Sprintf("+%s=%s\n", v, ConvertToString(value))
-				report = append(report, msg)
-			}
+	if _, ok := config.Services[serviceName]; !ok {
+		fmt.Println("Service not found: " + serviceName)
+		return nil
+	}
+
+	for k, v := range config.Services[serviceName].ConfigMapping {
+		value := common.GetNestedFieldValue(service.Spec.NodeTemplate.Ansible.AnsibleVars, common.SnakeToCamel(v))
+		if srcMap[k] != common.ConvertToString(value) {
+			msg = fmt.Sprintf("-%s=%s\n", k, srcMap[k])
+			report = append(report, msg)
+			msg = fmt.Sprintf("+%s=%s\n", v, common.ConvertToString(value))
+			report = append(report, msg)
 		}
 	}
 	godiff.PrintReport(report)

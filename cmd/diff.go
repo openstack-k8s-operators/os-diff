@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"github.com/openstack-k8s-operators/os-diff/pkg/servicecfg"
 
@@ -32,6 +33,7 @@ var quiet bool
 var file1Cmd string
 var file2Cmd string
 var crd bool
+var serviceCfgFile string
 
 var diffCmd = &cobra.Command{
 	Use:   "diff [path1] [path2]",
@@ -68,7 +70,7 @@ Example for directories:
 		path1 := args[0]
 		path2 := args[1]
 		if crd {
-			servicecfg.DiffEdpmCrdFromFile(path1, path2, "ovs_external_ids")
+			servicecfg.DiffEdpmCrdFromFile(path1, path2, "ovs_external_ids", serviceCfgFile)
 			return
 		}
 		if remote {
@@ -107,5 +109,6 @@ func init() {
 	diffCmd.Flags().BoolVar(&quiet, "quiet", false, "Do not print difference on the console and use logs report, only for files comparison")
 	diffCmd.Flags().BoolVar(&remote, "remote", false, "Run the diff remotely.")
 	diffCmd.Flags().BoolVar(&crd, "crd", false, "Compare a CRDs with a config file.")
+	diffCmd.Flags().StringVarP(&serviceCfgFile, "service-config", "f", "config.yaml", "Path for the Yaml config where the services are described.")
 	rootCmd.AddCommand(diffCmd)
 }

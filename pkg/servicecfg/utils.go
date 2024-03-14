@@ -19,32 +19,12 @@ package servicecfg
 import (
 	"fmt"
 	"io/ioutil"
-	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
-	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 )
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func snakeToCamel(s string) string {
-	parts := strings.Split(s, "_")
-	var result string
-	for _, part := range parts {
-		result += strings.Title(part)
-	}
-	return result
-}
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
@@ -58,7 +38,7 @@ func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, servic
 
 func GetConfigFromPod(serviceConfigPath string, podName string, containerName string) ([]byte, error) {
 
-	if TestOCConnection() {
+	if common.TestOCConnection() {
 		fullName, err := GetPodFullName(podName)
 		if err != nil {
 			return nil, err
@@ -101,17 +81,8 @@ func GetPodFullName(podName string) (string, error) {
 	return string(output[:len(output)-1]), nil
 }
 
-func TestOCConnection() bool {
-	cmd := exec.Command("oc", "whoami")
-	_, err := cmd.Output()
-	if err != nil {
-		return false
-	}
-	return true
-}
-
 func GetOCConfigMap(configMapName string) ([]byte, error) {
-	if TestOCConnection() {
+	if common.TestOCConnection() {
 		// Get full pod name
 		cmd := "oc get configmap/" + configMapName + " -o yaml"
 		output, err := exec.Command("bash", "-c", cmd).Output()
@@ -144,85 +115,4 @@ func LoadServiceConfig(file string) ([]byte, error) {
 		panic(err)
 	}
 	return serviceConfig, nil
-}
-
-func cleanIniSections(config string) string {
-	lines := strings.Split(config, "\n")
-	sectionMap := make(map[string][]string)
-	currentSection := ""
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		// Check if line is a section header
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			currentSection = strings.TrimPrefix(strings.TrimSuffix(line, "]"), "[")
-			continue
-		}
-		// Skip empty lines or lines without '='
-		if line == "" || !strings.Contains(line, "=") {
-			continue
-		}
-		// Append key-value pairs to section map
-		if currentSection != "" {
-			sectionMap[currentSection] = append(sectionMap[currentSection], line)
-		}
-	}
-	var sb strings.Builder
-	// Build updated INI string
-	for section, lines := range sectionMap {
-		sb.WriteString(fmt.Sprintf("[%s]\n", section))
-		for _, line := range lines {
-			sb.WriteString(fmt.Sprintf("%s\n", line))
-		}
-		sb.WriteString("\n")
-	}
-
-	return sb.String()
-}
-
-func getNestedFieldValue(data interface{}, keyName string) interface{} {
-	val := reflect.ValueOf(data)
-	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
-		val = val.Elem()
-	}
-	if val.Kind() != reflect.Struct {
-		return nil
-	}
-
-	field := val.FieldByName(keyName)
-	if !field.IsValid() {
-		return nil
-	}
-
-	return field.Interface()
-}
-
-func LoadServiceConfigFile(configPath string) error {
-	file, err := os.Open(configPath)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return err
-	}
-	defer file.Close()
-
-	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
-		fmt.Println("Error decoding YAML:", err)
-		return err
-	}
-	return nil
-}
-
-func ConvertToString(value interface{}) string {
-	switch v := value.(type) {
-	case string:
-		return v
-	case bool:
-		return fmt.Sprintf("%t", v)
-	case []string:
-		return fmt.Sprintf("%v", v)
-	default:
-		return fmt.Sprintf("%v", v)
-	}
 }
