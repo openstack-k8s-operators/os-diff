@@ -19,18 +19,10 @@ package servicecfg
 import (
 	"fmt"
 	"io/ioutil"
-<<<<<<< HEAD
 	"strings"
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
-)
-
-=======
-	"os-diff/pkg/godiff"
-	"strings"
-
-	"gopkg.in/yaml.v2"
 )
 
 var config Config
@@ -55,7 +47,6 @@ type Config struct {
 	Services map[string]Service `yaml:"services"`
 }
 
->>>>>>> 2f61bfb (Add edpm service support)
 type OpenStackDataPlaneNodeSet struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`

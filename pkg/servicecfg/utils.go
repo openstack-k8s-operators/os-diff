@@ -22,12 +22,22 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"gopkg.in/yaml.v3"
 )
+
+func snakeToCamel(s string) string {
+	parts := strings.Split(s, "_")
+	var result string
+	for _, part := range parts {
+		result += strings.Title(part)
+	}
+	return result
+}
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
@@ -175,4 +185,51 @@ func ExtractCustomServiceConfig(yamlData string) ([]string, error) {
 		}
 	}
 	return customServiceConfigs, nil
+}
+
+func getNestedFieldValue(data interface{}, keyName string) interface{} {
+	val := reflect.ValueOf(data)
+	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
+		val = val.Elem()
+	}
+	if val.Kind() != reflect.Struct {
+		return nil
+	}
+
+	field := val.FieldByName(keyName)
+	if !field.IsValid() {
+		return nil
+	}
+
+	return field.Interface()
+}
+
+func LoadServiceConfigFile(configPath string) error {
+	file, err := os.Open(configPath)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return err
+	}
+	defer file.Close()
+
+	decoder := yaml.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		fmt.Println("Error decoding YAML:", err)
+		return err
+	}
+	return nil
+}
+
+func ConvertToString(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case bool:
+		return fmt.Sprintf("%t", v)
+	case []string:
+		return fmt.Sprintf("%v", v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
