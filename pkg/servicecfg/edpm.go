@@ -19,6 +19,7 @@ package servicecfg
 import (
 	"fmt"
 	"io/ioutil"
+<<<<<<< HEAD
 	"strings"
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
@@ -27,6 +28,36 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+=======
+	"os-diff/pkg/godiff"
+	"strings"
+
+	"gopkg.in/yaml.v2"
+)
+
+var config Config
+
+// Service YAML Config Structure
+type Service struct {
+	Enable             bool              `yaml:"enable"`
+	PodmanId           string            `yaml:"podman_id"`
+	PodmanImage        string            `yaml:"podman_image"`
+	PodmanName         string            `yaml:"podman_name"`
+	PodName            string            `yaml:"pod_name"`
+	ContainerName      string            `yaml:"container_name"`
+	StrictPodNameMatch bool              `yaml:"strict_pod_name_match"`
+	Path               []string          `yaml:"path"`
+	Hosts              []string          `yaml:"hosts"`
+	ServiceCommand     string            `yaml:"service_command"`
+	CatOutput          bool              `yaml:"cat_output"`
+	ConfigMapping      map[string]string `yaml:"config_mapping"`
+}
+
+type Config struct {
+	Services map[string]Service `yaml:"services"`
+}
+
+>>>>>>> 2f61bfb (Add edpm service support)
 type OpenStackDataPlaneNodeSet struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
