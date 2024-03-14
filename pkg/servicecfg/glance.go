@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"gopkg.in/yaml.v3"
 )
 
@@ -88,5 +89,5 @@ func LoadGlanceOpenShiftConfig(configPath string) string {
 		sb.WriteString(service.Spec.Glance.Template.CustomServiceConfig)
 	}
 
-	return cleanIniSections(sb.String())
+	return godiff.CleanIniSections(sb.String())
 }

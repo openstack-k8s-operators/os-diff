@@ -58,7 +58,7 @@ or
 
 func init() {
 	cfgDiffCmd.Flags().StringVarP(&configPatchFile, "configpatch", "o", "", "OpenShift configmap patch file path.")
-	cfgDiffCmd.Flags().StringVarP(&configFile, "configfile", "c", "", "OpenStack service INI config file path.")
+	cfgDiffCmd.Flags().StringVarP(&configFile, "configfile", "f", "", "OpenStack service INI config file path.")
 	cfgDiffCmd.Flags().StringVarP(&service, "service", "s", "", "OpenStack service, could be one of: Cinder, Glance...")
 	cfgDiffCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
 	cfgDiffCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from OpenStack podman container.")

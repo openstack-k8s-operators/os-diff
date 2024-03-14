@@ -21,57 +21,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"os/exec"
 	"path"
 	"strings"
 
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
+
 	"gopkg.in/yaml.v3"
 )
 
-var config Config
-
-// Service YAML Config Structure
-type Service struct {
-	Enable             bool     `yaml:"enable"`
-	PodmanId           string   `yaml:"podman_id"`
-	PodmanImage        string   `yaml:"podman_image"`
-	PodmanName         string   `yaml:"podman_name"`
-	PodName            string   `yaml:"pod_name"`
-	ContainerName      string   `yaml:"container_name"`
-	StrictPodNameMatch bool     `yaml:"strict_pod_name_match"`
-	Path               []string `yaml:"path"`
-	Hosts              []string `yaml:"hosts"`
-	ServiceCommand     string   `yaml:"service_command"`
-	CatOutput          bool     `yaml:"cat_output"`
-}
-
-type Config struct {
-	Services map[string]Service `yaml:"services"`
-}
+var config common.Config
 
 // TripleO information structures:
 type PodmanContainer struct {
 	Image string   `json:"Image"`
 	ID    string   `json:"ID"`
 	Names []string `json:"Names"`
-}
-
-func LoadServiceConfig(configPath string) error {
-	file, err := os.Open(configPath)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return err
-	}
-	defer file.Close()
-
-	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
-		fmt.Println("Error decoding YAML:", err)
-		return err
-	}
-	return nil
 }
 
 func dumpConfigFile(configPath string) error {
@@ -298,10 +263,11 @@ func FetchConfigFromEnv(configPath string,
 	localDir string, remoteDir string, tripleo bool, connection, sshCmd string, undercloud string) error {
 
 	var local bool
-	err := LoadServiceConfig(configPath)
+	cfg, err := common.LoadServiceConfigFile(configPath)
 	if err != nil {
 		return err
 	}
+	config = cfg
 
 	if connection == "local" {
 		local = true
@@ -362,14 +328,14 @@ func SetTripleODataEnv(configPath string, sshCmd string, filters []string, all b
 	}
 	data, _ := buildPodmanInfo(output, filters)
 	// Load config.yaml
-	err = LoadServiceConfig(configPath)
+	config, err = common.LoadServiceConfigFile(configPath)
 	if err != nil {
 		return err
 	}
 	// Update or add data to config
 	for name, info := range data {
 		if _, ok := config.Services[name]; !ok {
-			config.Services[name] = Service{}
+			config.Services[name] = common.Service{}
 		}
 		if entry, ok := config.Services[name]; ok {
 			entry.PodmanId = info["containerid"]
