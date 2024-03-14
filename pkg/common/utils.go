@@ -18,9 +18,36 @@
 package common
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
+	"reflect"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
+
+var config Config
+
+// Service YAML Config Structure
+type Service struct {
+	Enable             bool              `yaml:"enable"`
+	PodmanId           string            `yaml:"podman_id"`
+	PodmanImage        string            `yaml:"podman_image"`
+	PodmanName         string            `yaml:"podman_name"`
+	PodName            string            `yaml:"pod_name"`
+	ContainerName      string            `yaml:"container_name"`
+	StrictPodNameMatch bool              `yaml:"strict_pod_name_match"`
+	Path               []string          `yaml:"path"`
+	Hosts              []string          `yaml:"hosts"`
+	ServiceCommand     string            `yaml:"service_command"`
+	CatOutput          bool              `yaml:"cat_output"`
+	ConfigMapping      map[string]string `yaml:"config_mapping"`
+}
+
+type Config struct {
+	Services map[string]Service `yaml:"services"`
+}
 
 // Shell execution functions:
 func ExecCmd(cmd string) ([]string, error) {
@@ -64,4 +91,60 @@ func StringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func GetNestedFieldValue(data interface{}, keyName string) interface{} {
+	val := reflect.ValueOf(data)
+	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
+		val = val.Elem()
+	}
+	if val.Kind() != reflect.Struct {
+		return nil
+	}
+
+	field := val.FieldByName(keyName)
+	if !field.IsValid() {
+		return nil
+	}
+
+	return field.Interface()
+}
+
+func LoadServiceConfigFile(configPath string) (Config, error) {
+	file, err := os.Open(configPath)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return config, err
+	}
+	defer file.Close()
+
+	decoder := yaml.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		fmt.Println("Error decoding YAML:", err)
+		return config, err
+	}
+	return config, nil
+}
+
+func ConvertToString(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case bool:
+		return fmt.Sprintf("%t", v)
+	case []string:
+		return fmt.Sprintf("%v", v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+func SnakeToCamel(s string) string {
+	parts := strings.Split(s, "_")
+	var result string
+	for _, part := range parts {
+		result += strings.Title(part)
+	}
+	return result
 }
