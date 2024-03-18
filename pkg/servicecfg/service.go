@@ -56,34 +56,6 @@ type ConfigMapDataStruct struct {
 
 type ConfigMapConf string
 
-func ExtractCustomServiceConfig(yamlData string) ([]string, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlData), &data); err != nil {
-		return nil, err
-	}
-
-	var customServiceConfigs []string
-	for _, value := range data {
-		spec, ok := value.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		for _, v := range spec {
-			template, ok := v.(map[string]interface{})["template"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			customServiceConfig, ok := template["customServiceConfig"].(string)
-			if !ok {
-				continue
-			}
-			customServiceConfigs = append(customServiceConfigs, customServiceConfig)
-		}
-	}
-	return customServiceConfigs, nil
-}
-
 func DiffServiceConfigWithCRD(service string, crdFile string, configFile string, serviceCfgFile string) error {
 	// Load config
 	var config common.Config
