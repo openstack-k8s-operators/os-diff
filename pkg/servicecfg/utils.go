@@ -26,6 +26,7 @@ import (
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
+	"gopkg.in/yaml.v3"
 )
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
@@ -146,4 +147,32 @@ func LoadFilesIntoMap(fileName string) (map[string]string, error) {
 	}
 
 	return result, nil
+}
+
+func ExtractCustomServiceConfig(yamlData string) ([]string, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlData), &data); err != nil {
+		return nil, err
+	}
+
+	var customServiceConfigs []string
+	for _, value := range data {
+		spec, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		for _, v := range spec {
+			template, ok := v.(map[string]interface{})["template"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			customServiceConfig, ok := template["customServiceConfig"].(string)
+			if !ok {
+				continue
+			}
+			customServiceConfigs = append(customServiceConfigs, customServiceConfig)
+		}
+	}
+	return customServiceConfigs, nil
 }
