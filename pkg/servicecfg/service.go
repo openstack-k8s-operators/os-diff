@@ -18,11 +18,14 @@ package servicecfg
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"path/filepath"
 	"strings"
+
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 
 	"gopkg.in/yaml.v3"
 )
@@ -53,89 +56,138 @@ type ConfigMapDataStruct struct {
 
 type ConfigMapConf string
 
-func DiffServiceConfig(service string, ocpConfig string, serviceConfig string, sidebyside bool) error {
-	var servicePatch string
-	// Get ocpConfig
-	if service == "cinder" {
-		servicePatch = LoadCinderOpenShiftConfig(ocpConfig)
-	} else if service == "glance" {
-		servicePatch = LoadGlanceOpenShiftConfig(ocpConfig)
-	} else {
-		msg := `Service not supported, please implement it.
-			Follow the instructions to add new OpenStack services here:
-			https://github.com/openstack-k8s-operators/os-diff#add-service`
-		panic(msg)
+func ExtractCustomServiceConfig(yamlData string) ([]string, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlData), &data); err != nil {
+		return nil, err
 	}
 
-	// Get service Config
-	osConfig, err := LoadServiceConfig(serviceConfig)
-	if err != nil {
-		panic(err)
-	}
+	var customServiceConfigs []string
+	for _, value := range data {
+		spec, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		for _, v := range spec {
+			template, ok := v.(map[string]interface{})["template"].(map[string]interface{})
+			if !ok {
+				continue
+			}
 
-	_, err = CompareIniConfig(osConfig, []byte(servicePatch), serviceConfig, ocpConfig)
-	if err != nil {
-		panic(err)
-	}
-	if sidebyside {
-		_, err = CompareIniConfig(osConfig, []byte(servicePatch), serviceConfig, ocpConfig)
-		if err != nil {
-			panic(err)
+			customServiceConfig, ok := template["customServiceConfig"].(string)
+			if !ok {
+				continue
+			}
+			customServiceConfigs = append(customServiceConfigs, customServiceConfig)
 		}
 	}
+	return customServiceConfigs, nil
+}
+
+func DiffServiceConfigWithCRD(service string, crdFile string, configFile string, serviceCfgFile string) error {
+	// Load config
+	var config common.Config
+	config, _ = common.LoadServiceConfigFile(serviceCfgFile)
+	//Load files
+	src, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	yamlFile, err := ioutil.ReadFile(crdFile)
+	if err != nil {
+		return err
+	}
+	// Make sure crdFile is Yaml
+	if common.DetectType([]byte(crdFile)) != "yaml" {
+		fmt.Println("Error, file2 is not a Yaml or a CRD file. Please provide a correct file.")
+		return fmt.Errorf("wrong file2 type")
+	}
+	if service != "" {
+		if config.Services[service].ConfigMapping != nil {
+			var fileMap map[string]string
+			if service == "ovs_external_ids" {
+				fileMap = LoadOvsExternalIds(configFile)
+			} else {
+				if common.DetectType(src) == "raw" {
+					fileMap, _ = LoadFilesIntoMap(configFile)
+				} else {
+					fmt.Println("File type not supported, only support format as: key=value or key: value.")
+					return nil
+				}
+			}
+			var edpmService OpenStackDataPlaneNodeSet
+			err = yaml.Unmarshal(yamlFile, &edpmService)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println("Start to compare file contents for: " + configFile + " and " + crdFile)
+			return CompareMappingConfig(fileMap, config.Services[service].ConfigMapping, edpmService)
+		}
+	}
+
+	if common.DetectType(src) == "ini" {
+		customServiceConfigs, err := ExtractCustomServiceConfig(string(yamlFile))
+		if err != nil {
+			fmt.Println("Error:", err)
+			return err
+		}
+		_, err = CompareIniConfig(src, []byte(strings.Join(customServiceConfigs, "")), configFile, crdFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("Unsupported config file type, only support INI file.")
+	}
 	return nil
 }
 
-func DiffServiceConfigFromPod(service string, ocpConfig string, serviceConfig string, containerName string) error {
-	var servicePatch string
-	var podName string
-	// Get ocpConfig
-	if service == "cinder" {
-		podName = "cinder"
-		servicePatch = LoadCinderOpenShiftConfig(ocpConfig)
-	} else if service == "glance" {
-		// @todo: should be move a config spec file, users must be describe their env in a file.cfg.
-		podName = "glance-external-api"
-		servicePatch = LoadGlanceOpenShiftConfig(ocpConfig)
-	} else {
-		msg := `Service not supported, please implement it.
-			Follow the instructions to add new OpenStack services here:
-			https://github.com/openstack-k8s-operators/os-diff#add-service`
-		panic(msg)
+func DiffServiceConfigFromPod(service string, crdFile string, configFile string, serviceCfgFile string) error {
+	var config common.Config
+	config, _ = common.LoadServiceConfigFile(serviceCfgFile)
+	yamlFile, err := ioutil.ReadFile(crdFile)
+	if err != nil {
+		return err
+	}
+	customServiceConfigs, err := ExtractCustomServiceConfig(string(yamlFile))
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
 	}
 	// Get service Config
-	podConfig, err := GetConfigFromPod(serviceConfig, podName, containerName)
+	podConfig, err := GetConfigFromPod(configFile, config.Services[service].PodName, config.Services[service].ContainerName)
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = CompareIniConfig(podConfig, []byte(servicePatch), serviceConfig, ocpConfig)
+	_, err = CompareIniConfig(podConfig, []byte(strings.Join(customServiceConfigs, "")), configFile, crdFile)
 	if err != nil {
 		panic(err)
 	}
 	return nil
 }
 
-func DiffServiceConfigFromPodman(service string, ocpConfig string, serviceConfig string, podname string) error {
-	var servicePatch string
+func DiffServiceConfigFromPodman(service string, crdFile string, configFile string, serviceCfgFile string) error {
+	var config common.Config
+	config, _ = common.LoadServiceConfigFile(serviceCfgFile)
 	// Get ocpConfig
-	if service == "cinder" {
-		servicePatch = LoadCinderOpenShiftConfig(ocpConfig)
-	} else if service == "glance" {
-		servicePatch = LoadGlanceOpenShiftConfig(ocpConfig)
-	} else {
-		msg := `Service not supported, please implement it.
-			Follow the instructions to add new OpenStack services here:
-			https://github.com/openstack-k8s-operators/os-diff#add-service`
-		panic(msg)
+	yamlFile, err := ioutil.ReadFile(crdFile)
+	if err != nil {
+		return err
 	}
+	customServiceConfigs, err := ExtractCustomServiceConfig(string(yamlFile))
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+
 	// Get service Config
-	osConfig, err := GetConfigFromPodman(serviceConfig, podname)
+	osConfig, err := GetConfigFromPodman(configFile, config.Services[service].PodmanName)
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = CompareIniConfig(osConfig, []byte(servicePatch), serviceConfig, ocpConfig)
+	_, err = CompareIniConfig(osConfig, []byte(strings.Join(customServiceConfigs, "")), configFile, crdFile)
 	if err != nil {
 		panic(err)
 	}

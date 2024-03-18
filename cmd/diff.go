@@ -34,6 +34,10 @@ var file1Cmd string
 var file2Cmd string
 var crd bool
 var serviceCfgFile string
+var service string
+var frompod bool
+var frompodman bool
+var podname string
 
 var diffCmd = &cobra.Command{
 	Use:   "diff [path1] [path2]",
@@ -59,7 +63,7 @@ Example for directories:
 ./os-diff diff tests/podman-containers/ tests/ocp-pods/
 
 
-./os-diff diff ovs_external_ids.json edpm.crd --crd edpm
+./os-diff diff ovs_external_ids.json edpm.crd --crd ovs_external_ids
 
 /!\ Important: remote option is only available for files comparison.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -70,7 +74,19 @@ Example for directories:
 		path1 := args[0]
 		path2 := args[1]
 		if crd {
-			servicecfg.DiffEdpmCrdFromFile(path1, path2, "ovs_external_ids", serviceCfgFile)
+			if frompod {
+				if podname == "" {
+					panic("Please provide a pod name with --frompod option.")
+				}
+				servicecfg.DiffServiceConfigFromPod(service, path2, path1, serviceCfgFile)
+			} else if frompodman {
+				if podname == "" {
+					panic("Please provide a pod name with --frompodman option.")
+				}
+				servicecfg.DiffServiceConfigFromPodman(service, path2, path1, serviceCfgFile)
+			} else {
+				servicecfg.DiffServiceConfigWithCRD(service, path2, path1, serviceCfgFile)
+			}
 			return
 		}
 		if remote {
@@ -109,6 +125,9 @@ func init() {
 	diffCmd.Flags().BoolVar(&quiet, "quiet", false, "Do not print difference on the console and use logs report, only for files comparison")
 	diffCmd.Flags().BoolVar(&remote, "remote", false, "Run the diff remotely.")
 	diffCmd.Flags().BoolVar(&crd, "crd", false, "Compare a CRDs with a config file.")
-	diffCmd.Flags().StringVarP(&serviceCfgFile, "service-config", "f", "config.yaml", "Path for the Yaml config where the services are described.")
+	diffCmd.Flags().StringVarP(&serviceCfgFile, "service-config", "f", "config.yaml", "Path for the Yaml config where the services are described, default is config.yaml located in /etc/os-diff/config.yaml.")
+	diffCmd.Flags().StringVarP(&service, "service", "s", "", "Service to compare with a crd, could be one of the services: cinder, glance, ovs_external_ids, edpm... Should be used with --crd option..")
+	diffCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
+	diffCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from OpenStack podman container.")
 	rootCmd.AddCommand(diffCmd)
 }
