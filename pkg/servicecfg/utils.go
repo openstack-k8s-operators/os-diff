@@ -17,35 +17,16 @@
 package servicecfg
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
-<<<<<<< HEAD
-=======
 	"os"
-	"os-diff/pkg/godiff"
->>>>>>> 2f61bfb (Add edpm service support)
 	"os/exec"
-	"reflect"
 	"strings"
-<<<<<<< HEAD
-=======
-
-	"gopkg.in/yaml.v2"
-)
->>>>>>> 2f61bfb (Add edpm service support)
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 )
-
-func snakeToCamel(s string) string {
-	parts := strings.Split(s, "_")
-	var result string
-	for _, part := range parts {
-		result += strings.Title(part)
-	}
-	return result
-}
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
@@ -136,4 +117,33 @@ func LoadServiceConfig(file string) ([]byte, error) {
 		panic(err)
 	}
 	return serviceConfig, nil
+}
+
+func LoadFilesIntoMap(fileName string) (map[string]string, error) {
+	result := make(map[string]string)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			parts = strings.SplitN(line, ":", 2)
+		}
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			result[key] = value
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

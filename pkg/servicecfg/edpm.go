@@ -24,8 +24,6 @@ import (
 
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
-
-	"gopkg.in/yaml.v3"
 )
 
 =======
@@ -140,15 +138,8 @@ type OpenStackDataPlaneNodeSet struct {
 	} `yaml:"spec"`
 }
 
-func DiffEdpmCrdFromFile(srcFile string, EdpmPath string, serviceName string, serviceCfgFile string) error {
-
-	var report []string
-	var config common.Config
-	// Load config file
-	config, _ = common.LoadServiceConfigFile(serviceCfgFile)
-
-	//Load file
-	src, err := ioutil.ReadFile(srcFile)
+func LoadOvsExternalIds(ovsConfig string) map[string]string {
+	src, err := ioutil.ReadFile(ovsConfig)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -162,27 +153,14 @@ func DiffEdpmCrdFromFile(srcFile string, EdpmPath string, serviceName string, se
 		value := strings.Trim(parts[1], "\"")
 		srcMap[key] = value
 	}
+	return srcMap
+}
 
-	// Load Edpm
-	var service OpenStackDataPlaneNodeSet
-	yamlFile, err := ioutil.ReadFile(EdpmPath)
-	if err != nil {
-		panic(err)
-	}
-	err = yaml.Unmarshal(yamlFile, &service)
-	if err != nil {
-		panic(err)
-	}
-	msg := fmt.Sprintf("Start to compare file contents for: %s and: %s \n", srcFile, EdpmPath)
-	report = append(report, msg)
-	//Compare File keys with Edpm according to mapping
-	if _, ok := config.Services[serviceName]; !ok {
-		fmt.Println("Service not found: " + serviceName)
-		return nil
-	}
-
-	for k, v := range config.Services[serviceName].ConfigMapping {
-		value := common.GetNestedFieldValue(service.Spec.NodeTemplate.Ansible.AnsibleVars, common.SnakeToCamel(v))
+func CompareMappingConfig(srcMap map[string]string, configMapping map[string]string, edpmStruct OpenStackDataPlaneNodeSet) error {
+	var report []string
+	var msg string
+	for k, v := range configMapping {
+		value := common.GetNestedFieldValue(edpmStruct.Spec.NodeTemplate.Ansible.AnsibleVars, common.SnakeToCamel(v))
 		if srcMap[k] != common.ConvertToString(value) {
 			msg = fmt.Sprintf("-%s=%s\n", k, srcMap[k])
 			report = append(report, msg)
@@ -192,4 +170,5 @@ func DiffEdpmCrdFromFile(srcFile string, EdpmPath string, serviceName string, se
 	}
 	godiff.PrintReport(report)
 	return nil
+
 }
