@@ -161,4 +161,5 @@ func CompareMappingConfig(srcMap map[string]string, configMapping map[string]str
 	}
 	godiff.PrintReport(report)
 	return nil
+
 }
