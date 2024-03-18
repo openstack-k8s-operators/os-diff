@@ -19,6 +19,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 
 	"github.com/spf13/cobra"
@@ -52,7 +54,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.os-diff.yaml)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.os-diff.cfg)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -66,11 +68,11 @@ func init() {
 }
 
 func initConfig(cmd *cobra.Command) error {
-
 	// Bind the loaded config to a persistent flag
-	cmd.PersistentFlags().StringVarP(&osDiffConfig, "config", "c", "os-diff.cfg", "Config file (default is $PWD/config.ini)")
+	cmd.PersistentFlags().StringVarP(&osDiffConfig, "config", "c", "os-diff.cfg", "Config file (default is $PWD/os-diff.cfg)")
 	viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
-	config, err := common.LoadOSDiffConfig(osDiffConfig)
+	path := CheckFilesPresence(osDiffConfig)
+	config, err := common.LoadOSDiffConfig(path)
 	if err != nil {
 		return err
 	}
@@ -78,4 +80,26 @@ func initConfig(cmd *cobra.Command) error {
 	viper.Set("config", config)
 
 	return nil
+}
+
+func CheckFilesPresence(configFile string) string {
+	_, err := os.Stat(configFile)
+	if err == nil {
+		fmt.Println("Found " + configFile + " in the current working directory.")
+		return configFile
+	}
+
+	// If config.yaml doesn't exist in the current working directory,
+	// check if it exists in /etc
+	etcConfigFile := filepath.Join("/etc/os-diff/", configFile)
+	_, err = os.Stat(etcConfigFile)
+	if err == nil {
+		fmt.Println("Found os-diff.cfg in /etc/os-diff/.")
+		return etcConfigFile
+	}
+
+	// If config.yaml doesn't exist in both locations, raise an error and end the program
+	fmt.Println("Error: config.yaml not found in the current working directory or /etc/os-diff.")
+	os.Exit(1)
+	return ""
 }
