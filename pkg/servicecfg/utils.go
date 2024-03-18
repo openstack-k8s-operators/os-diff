@@ -30,15 +30,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func snakeToCamel(s string) string {
-	parts := strings.Split(s, "_")
-	var result string
-	for _, part := range parts {
-		result += strings.Title(part)
-	}
-	return result
-}
-
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
 	report, err := godiff.CompareIni(rawdata1, rawdata2, ocpConfig, serviceConfig, false)
