@@ -18,6 +18,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -147,4 +148,39 @@ func SnakeToCamel(s string) string {
 		result += strings.Title(part)
 	}
 	return result
+}
+
+func IsIni(data []byte) bool {
+	if data[0] == '[' {
+		return true
+	}
+	return false
+}
+
+func IsYaml(data []byte) bool {
+	var yamlData interface{}
+	if err := yaml.Unmarshal(data, &yamlData); err != nil {
+		fmt.Println("Error unmarshaling YAML:", err)
+		return false
+	}
+	return true
+}
+
+func IsJson(data []byte) bool {
+	var jsonData interface{}
+	err := json.Unmarshal(data, &jsonData)
+	return err == nil
+}
+
+func DetectType(value []byte) string {
+	switch {
+	case IsIni(value):
+		return "ini"
+	case IsYaml(value):
+		return "yaml"
+	case IsJson(value):
+		return "json"
+	default:
+		return "raw"
+	}
 }
