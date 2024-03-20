@@ -1,17 +1,16 @@
 package common
 
 import (
-	"testing"
 	"reflect"
-	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 // Test case for function ExecCmd
 func TestExecCmd(t *testing.T) {
 	testCases := []struct {
-		cmd          string
-		expectedOut  []string
-		expectedErr  error
+		cmd         string
+		expectedOut []string
+		expectedErr error
 	}{
 		{
 			cmd:         "echo hello",
@@ -76,27 +75,6 @@ func TestExecCmdSimple(t *testing.T) {
 	}
 }
 
-// Test case for function TestOCConnection
-func TestTestOCConnection_Success(t *testing.T) {
-	// Arrange
-
-	// Act
-	result := common.TestOCConnection()
-
-	// Assert
-	assert.True(t, result, "Expected TestOCConnection to return true for successful connection")
-}
-
-func TestTestOCConnection_Failure(t *testing.T) {
-	// Arrange
-
-	// Act
-	result := common.TestOCConnection()
-
-	// Assert
-	assert.False(t, result, "Expected TestOCConnection to return false for failed connection")
-}
-
 // Test case for function TestSshConnection
 func TestTestSshConnection(t *testing.T) {
 	tests := []struct {
@@ -125,89 +103,3 @@ func TestTestSshConnection(t *testing.T) {
 		})
 	}
 }
-
-// Test case for function TestOCConnection
-func TestTestOCConnection_Success(t *testing.T) {
-	testSuccessExecCmd := func(cmd string) ([]byte, error) {
-		return []byte("user123"), nil
-	}
-
-	ExecCmd = testSuccessExecCmd
-
-	result := TestOCConnection()
-
-	if !result {
-		t.Errorf("Expected TestOCConnection to return true for successful connection, but got false")
-	}
-}
-
-func TestTestOCConnection_Failure(t *testing.T) {
-	testFailureExecCmd := func(cmd string) ([]byte, error) {
-		return nil, fmt.Errorf("Error executing cmd")
-	}
-
-	ExecCmd = testFailureExecCmd
-
-	result := TestOCConnection()
-
-	if result {
-		t.Errorf("Expected TestOCConnection to return false for failed connection, but got true")
-	}
-}
-
-// Test case for function TestOCConnection
-func TestTestOCConnection_Success(t *testing.T) {
-	mockExecCmdSuccess := func(cmd string) (string, error) {
-		return "user123", nil
-	}
-
-	ExecCmd = mockExecCmdSuccess
-
-	result := TestOCConnection()
-	if result != true {
-		t.Error("Expected true, got false")
-	}
-}
-
-func TestTestOCConnection_Failure(t *testing.T) {
-	mockExecCmdFailure := func(cmd string) (string, error) {
-		return "", errors.New("error executing command")
-	}
-
-	ExecCmd = mockExecCmdFailure
-	
-	result := TestOCConnection()
-	if result != false {
-		t.Error("Expected false, got true")
-	}
-}
-
-// Test case for function TestOCConnection
-func TestTestOCConnection_Success(t *testing.T) {
-	// Mocking the ExecCmd function to return nil error
-	oldExecCmd := ExecCmd
-	defer func() { ExecCmd = oldExecCmd }()
-	ExecCmd = func(cmd string) (string, error) {
-		return "test_user", nil
-	}
-
-	result := TestOCConnection()
-	if !result {
-		t.Errorf("TestOCConnection returned false for a successful command execution")
-	}
-}
-
-func TestTestOCConnection_Error(t *testing.T) {
-	// Mocking the ExecCmd function to return an error
-	oldExecCmd := ExecCmd
-	defer func() { ExecCmd = oldExecCmd }()
-	ExecCmd = func(cmd string) (string, error) {
-		return "", fmt.Errorf("Error executing command")
-	}
-
-	result := TestOCConnection()
-	if result {
-		t.Errorf("TestOCConnection returned true for an error scenario")
-	}
-}
-

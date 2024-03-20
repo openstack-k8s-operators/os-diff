@@ -1,16 +1,12 @@
 package godiff
 
 import (
-	"testing"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strings"
-	"fmt"
 	"reflect"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
-	"encoding/json"
-	"bytes"
 )
 
 // Test case for function writeReport
@@ -107,76 +103,3 @@ func TestCompareJSONFiles(t *testing.T) {
 		t.Errorf("Expected error when unmarshalling invalid JSON but got nil")
 	}
 }
-```
-
-// Test case for function CompareFiles
-func TestCompareFiles(t *testing.T) {
-	// Create temporary test files
-	originContent := []byte("test content for origin file")
-	destContent := []byte("test content for destination file")
-	origin := "test_origin.txt"
-	dest := "test_dest.txt"
-
-	err := ioutil.WriteFile(origin, originContent, 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-	defer os.Remove(origin)
-
-	err = ioutil.WriteFile(dest, destContent, 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-	defer os.Remove(dest)
-
-	// Test CompareFiles function
-	report, err := CompareFiles(origin, dest, false, false)
-	if err != nil {
-		t.Fatalf("Error while running CompareFiles: %v", err)
-	}
-
-	// Check if report contains expected differences or not
-	if len(report) != 0 {
-		t.Errorf("Expected no differences, found differences in the files")
-	}
-
-	// Test with verbose and print flag enabled
-	report, err = CompareFiles(origin, dest, true, true)
-	if err != nil {
-		t.Fatalf("Error while running CompareFiles: %v", err)
-	}
-
-	// Check if report contains expected differences or not
-	if len(report) != 0 {
-		t.Errorf("Expected no differences, found differences in the files while printing with verbose")
-	}
-
-	// Test with non-existent files
-	_, err = CompareFiles("nonexistent_file1.txt", "nonexistent_file2.txt", false, false)
-	if err == nil {
-		t.Fatalf("Expected error for non-existent files, got nil")
-	}
-}
-
-// Test case for function CompareFilesFromRemote
-func TestCompareFilesFromRemote(t *testing.T) {
-	origin := "origin.txt"
-	dest := "dest.txt"
-	originRemoteCmd := "ssh user@server cat origin.txt"
-	destRemoteCmd := "ssh user@server cat dest.txt"
-	verbose := true
-
-	err := CompareFilesFromRemote(origin, dest, originRemoteCmd, destRemoteCmd, verbose)
-	if err != nil {
-		t.Errorf("Error running CompareFilesFromRemote: %v", err)
-	}
-
-	// Add additional test cases for edge cases and scenarios
-
-	// Test case where GetConfigFromRemote returns an error
-	err = CompareFilesFromRemote("invalidOrigin", "invalidDest", originRemoteCmd, destRemoteCmd, verbose)
-	if err == nil {
-		t.Error("Expected an error but got nil")
-	}
-}
-
