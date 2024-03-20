@@ -79,7 +79,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 				return
 			}
 			if update || updateOnly {
-				collectcfg.SetTripleODataEnv(serviceConfig, sshCmd, filters, true)
+				collectcfg.SetTripleODataEnv(serviceConfig, fullCmd, filters, true)
 				if updateOnly {
 					return
 				}
