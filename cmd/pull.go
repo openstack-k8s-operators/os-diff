@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/openstack-k8s-operators/os-diff/pkg/collectcfg"
 	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 
@@ -62,7 +63,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 			}
 			// OCP Settings
 			localOCPDir := config.Openshift.OcpLocalConfigPath
-			err := collectcfg.FetchConfigFromEnv(serviceConfig, localOCPDir, "", false, config.Openshift.Connection, "", "")
+			err := collectcfg.FetchConfigFromEnv(serviceConfig, localOCPDir, "", false, config.Openshift.Connection, "", "", filters)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return
@@ -79,8 +80,11 @@ This command will populate the config.yaml file with the podman and image Ids an
 			}
 			if update || updateOnly {
 				collectcfg.SetTripleODataEnv(serviceConfig, sshCmd, filters, true)
+				if updateOnly {
+					return
+				}
 			}
-			err := collectcfg.FetchConfigFromEnv(serviceConfig, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, config.Tripleo.DirectorHost)
+			err := collectcfg.FetchConfigFromEnv(serviceConfig, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, config.Tripleo.DirectorHost, filters)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return

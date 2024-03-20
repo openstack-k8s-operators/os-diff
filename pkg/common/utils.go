@@ -67,6 +67,17 @@ func ExecCmdSimple(cmd string) (string, error) {
 	return string(output), nil
 }
 
+func ExecComplexCmd(cmd string) (string, error) {
+	// Format Shel command before execute
+	args := FormatShellCommand(cmd)
+	output, err := exec.Command(args[0], args[1:]...).Output()
+	if err != nil {
+		fmt.Println(err)
+		return string(output), err
+	}
+	return string(output), nil
+}
+
 func TestOCConnection() bool {
 	cmd := "oc whoami"
 	_, err := ExecCmd(cmd)
@@ -183,4 +194,44 @@ func DetectType(value []byte) string {
 	default:
 		return "raw"
 	}
+}
+
+func FormatShellCommand(input string) []string {
+	var tokens []string
+	var currentToken string
+	inQuote := false
+	quoteChar := rune(0)
+
+	for _, char := range input {
+		switch char {
+		case '"':
+			if !inQuote || quoteChar == '"' {
+				inQuote = !inQuote
+				quoteChar = '"'
+			}
+			currentToken += string(char)
+		case '\'':
+			if !inQuote || quoteChar == '\'' {
+				inQuote = !inQuote
+				quoteChar = '\''
+			}
+			currentToken += string(char)
+		case ' ', '\t':
+			if !inQuote {
+				if currentToken != "" {
+					tokens = append(tokens, currentToken)
+					currentToken = ""
+				}
+			} else {
+				currentToken += string(char)
+			}
+		default:
+			currentToken += string(char)
+		}
+	}
+	// Add the last token
+	if currentToken != "" {
+		tokens = append(tokens, currentToken)
+	}
+	return tokens
 }

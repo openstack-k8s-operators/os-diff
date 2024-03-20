@@ -44,11 +44,11 @@ var diffCmd = &cobra.Command{
 	Short: "Compare two files or directories",
 	Long: `Print diff for paths provided via the command line: For example:
 
-Example for two files:
+* Example for two files:
 
 ./os-diff diff tests/podman/keystone.conf tests/ocp/keystone.conf
 
-Example for remote diff:
+* Example for remote diff:
 
 CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
 CMD2="oc exec glance-external-api-6cf6c98564-blggc -c glance-api --"
@@ -58,12 +58,13 @@ OR, here only file 1 is remote:
 CMD1=oc exec -t neutron-cd94d8ccb-vq2gk -c neutron-api --
 ./os-diff diff /etc/neutron/neutron.conf /tmp/collect_tripleo_configs/neutron/etc/neutron/neutron.conf --file1-cmd="$CMD1" --remote
 
-Example for directories:
+* Example for directories:
 
 ./os-diff diff tests/podman-containers/ tests/ocp-pods/
 
+* Example for CRDs comparison:
 
-./os-diff diff ovs_external_ids.json edpm.crd --crd ovs_external_ids
+./os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 
 /!\ Important: remote option is only available for files comparison.`,
 	Run: func(cmd *cobra.Command, args []string) {
