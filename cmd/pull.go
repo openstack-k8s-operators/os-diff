@@ -54,6 +54,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 		if serviceConfig == "" {
 			serviceConfig = config.Default.ServiceConfigFile
 		}
+		configPath := CheckFilesPresence(serviceConfig)
 
 		if cloud == "ocp" {
 			// Test OCP connection:
@@ -63,7 +64,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 			}
 			// OCP Settings
 			localOCPDir := config.Openshift.OcpLocalConfigPath
-			err := collectcfg.FetchConfigFromEnv(serviceConfig, localOCPDir, "", false, config.Openshift.Connection, "", "", filters)
+			err := collectcfg.FetchConfigFromEnv(configPath, localOCPDir, "", false, config.Openshift.Connection, "", "", filters)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return
@@ -79,12 +80,12 @@ This command will populate the config.yaml file with the podman and image Ids an
 				return
 			}
 			if update || updateOnly {
-				collectcfg.SetTripleODataEnv(serviceConfig, fullCmd, filters, true)
+				collectcfg.SetTripleODataEnv(configPath, fullCmd, filters, true)
 				if updateOnly {
 					return
 				}
 			}
-			err := collectcfg.FetchConfigFromEnv(serviceConfig, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, config.Tripleo.DirectorHost, filters)
+			err := collectcfg.FetchConfigFromEnv(configPath, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, config.Tripleo.DirectorHost, filters)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return
