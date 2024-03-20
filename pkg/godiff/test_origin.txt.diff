@@ -1,4 +1,0 @@
-Source file path: test_origin.txt, difference with: test_dest.txt
-@@ line: 0
-+test content for origin file
--test content for destination file
