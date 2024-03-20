@@ -28,7 +28,7 @@ services:
   ovs_external_ids:
     hosts:
       - standalone
-    service_command: "ovs-vsctl list Open  list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'"
+    service_command: "ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'"
     cat_output: true
     path:
       - ovs_external_ids.json

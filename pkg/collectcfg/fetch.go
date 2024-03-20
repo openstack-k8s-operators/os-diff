@@ -53,14 +53,20 @@ func dumpConfigFile(configPath string) error {
 	return nil
 }
 
-func PullConfigs(configDir string, tripleo bool, sshCmd string, undercloud string) error {
+func PullConfigs(configDir string, tripleo bool, sshCmd string, undercloud string, filters []string) error {
 	// Pull configuration service by service
+	filterMap := make(map[string]struct{})
+	for _, filter := range filters {
+		filterMap[filter] = struct{}{}
+	}
 	for service := range config.Services {
-		if tripleo && (config.Services[service].PodmanName == "" || config.Services[service].PodmanId == "") {
-			PullConfigFromHosts(service, configDir, sshCmd, undercloud)
-		} else {
-			fullCmd := sshCmd + " " + undercloud
-			PullConfig(service, tripleo, configDir, fullCmd)
+		if _, ok := filterMap[service]; ok || len(filters) == 0 {
+			if tripleo && (config.Services[service].PodmanName == "" || config.Services[service].PodmanId == "") {
+				PullConfigFromHosts(service, configDir, sshCmd, undercloud)
+			} else {
+				fullCmd := sshCmd + " " + undercloud
+				PullConfig(service, tripleo, configDir, fullCmd)
+			}
 		}
 	}
 	return nil
@@ -155,11 +161,13 @@ func GetPodId(podName string) (string, error) {
 }
 
 func GetCommandOutput(command string, localPath string, sshCmd string) error {
-	cmd := sshCmd + " '" + command + " > " + localPath + "'"
-	_, err := common.ExecCmd(cmd)
+	cmd := sshCmd + " " + command + " > " + localPath
+	output, err := common.ExecComplexCmd(cmd)
 	if err != nil {
+		fmt.Println(output)
 		return err
 	}
+	fmt.Println(output)
 	return nil
 }
 
@@ -222,25 +230,32 @@ func CleanUp(remotePath string, sshCmd string) error {
 	return nil
 }
 
-func CreateServicesTrees(configDir string, sshCmd string, undercloud string) (string, error) {
+func CreateServicesTrees(configDir string, sshCmd string, undercloud string, filters []string) (string, error) {
+	filterMap := make(map[string]struct{})
+	for _, filter := range filters {
+		filterMap[filter] = struct{}{}
+	}
+
 	for service := range config.Services {
-		if len(config.Services[service].Hosts) != 0 {
-			for _, h := range config.Services[service].Hosts {
-				// Create trees for each hosts describe in config Yaml file
-				fullCmd := sshCmd + " " + h
+		if _, ok := filterMap[service]; ok || len(filters) == 0 {
+			if len(config.Services[service].Hosts) != 0 {
+				for _, h := range config.Services[service].Hosts {
+					// Create trees for each hosts describe in config Yaml file
+					fullCmd := sshCmd + " " + h
+					for _, path := range config.Services[service].Path {
+						output, err := CreateServiceTree(service, path, configDir, fullCmd, h)
+						if err != nil {
+							return output, err
+						}
+					}
+				}
+			} else {
+				fullCmd := sshCmd + " " + undercloud
 				for _, path := range config.Services[service].Path {
-					output, err := CreateServiceTree(service, path, configDir, fullCmd, h)
+					output, err := CreateServiceTree(service, path, configDir, fullCmd, "")
 					if err != nil {
 						return output, err
 					}
-				}
-			}
-		} else {
-			fullCmd := sshCmd + " " + undercloud
-			for _, path := range config.Services[service].Path {
-				output, err := CreateServiceTree(service, path, configDir, fullCmd, "")
-				if err != nil {
-					return output, err
 				}
 			}
 		}
@@ -260,7 +275,7 @@ func getDir(s string) string {
 }
 
 func FetchConfigFromEnv(configPath string,
-	localDir string, remoteDir string, tripleo bool, connection, sshCmd string, undercloud string) error {
+	localDir string, remoteDir string, tripleo bool, connection, sshCmd string, undercloud string, filters []string) error {
 
 	var local bool
 	cfg, err := common.LoadServiceConfigFile(configPath)
@@ -276,19 +291,19 @@ func FetchConfigFromEnv(configPath string,
 	}
 
 	if local {
-		output, err := CreateServicesTrees(localDir, sshCmd, undercloud)
+		output, err := CreateServicesTrees(localDir, sshCmd, undercloud, filters)
 		if err != nil {
 			fmt.Println(output)
 			return err
 		}
-		PullConfigs(localDir, tripleo, sshCmd, undercloud)
+		PullConfigs(localDir, tripleo, sshCmd, undercloud, filters)
 	} else {
-		output, err := CreateServicesTrees(remoteDir, sshCmd, undercloud)
+		output, err := CreateServicesTrees(remoteDir, sshCmd, undercloud, filters)
 		if err != nil {
 			fmt.Println(output)
 			return err
 		}
-		PullConfigs(remoteDir, tripleo, sshCmd, undercloud)
+		PullConfigs(remoteDir, tripleo, sshCmd, undercloud, filters)
 		SyncConfigDir(localDir, remoteDir, sshCmd, undercloud)
 		CleanUp(remoteDir, sshCmd)
 	}
@@ -296,6 +311,7 @@ func FetchConfigFromEnv(configPath string,
 }
 
 func buildPodmanInfo(output []byte, filters []string) (map[string]map[string]string, error) {
+
 	filterMap := make(map[string]struct{})
 	for _, filter := range filters {
 		filterMap[filter] = struct{}{}
@@ -309,7 +325,7 @@ func buildPodmanInfo(output []byte, filters []string) (map[string]map[string]str
 	data := make(map[string]map[string]string)
 	for _, container := range containers {
 		for _, name := range container.Names {
-			if _, ok := filterMap[name]; ok {
+			if _, ok := filterMap[name]; ok || len(filters) == 0 {
 				data[name] = map[string]string{
 					"containerid": container.ID[:12],
 					"image":       container.Image,
