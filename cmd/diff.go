@@ -74,19 +74,20 @@ CMD1=oc exec -t neutron-cd94d8ccb-vq2gk -c neutron-api --
 		}
 		path1 := args[0]
 		path2 := args[1]
+		configPath := CheckFilesPresence(serviceCfgFile)
 		if crd {
 			if frompod {
 				if podname == "" {
 					panic("Please provide a pod name with --frompod option.")
 				}
-				servicecfg.DiffServiceConfigFromPod(service, path2, path1, serviceCfgFile)
+				servicecfg.DiffServiceConfigFromPod(service, path2, path1, configPath)
 			} else if frompodman {
 				if podname == "" {
 					panic("Please provide a pod name with --frompodman option.")
 				}
-				servicecfg.DiffServiceConfigFromPodman(service, path2, path1, serviceCfgFile)
+				servicecfg.DiffServiceConfigFromPodman(service, path2, path1, configPath)
 			} else {
-				servicecfg.DiffServiceConfigWithCRD(service, path2, path1, serviceCfgFile)
+				servicecfg.DiffServiceConfigWithCRD(service, path2, path1, configPath)
 			}
 			return
 		}
