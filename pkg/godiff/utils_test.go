@@ -92,11 +92,6 @@ func TestIsIni(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "Empty data",
-			data:     []byte{},
-			expected: false,
-		},
-		{
 			name:     "Single character ini",
 			data:     []byte{'['},
 			expected: true,

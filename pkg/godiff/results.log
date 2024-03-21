@@ -1,0 +1,22 @@
+[36mINFO   [0m Write diff file: ./test_report.txt           
+[33mWARNING[0m Files: file1.txt and: file2.txt are differents. 
+[36mINFO   [0m Write diff file: ./test_report.txt           
+[33mWARNING[0m Files: file1.txt and: file2.txt are differents. 
+[36mINFO   [0m Write diff file: ./test_report.txt           
+[33mWARNING[0m Files: file1.txt and: file2.txt are differents. 
+[36mINFO   [0m Start basic line by line comparison          
+[33mWARNING[0m Line: line2 not found in: file2.txt line: 1  
+[33mWARNING[0m Line: line4 not found in: file1.txt line: 2  
+[33mWARNING[0m File: file1.txt has difference with: file2.txt 
+[36mINFO   [0m Write diff file: ./test_report.txt           
+[33mWARNING[0m Files: file1.txt and: file2.txt are differents. 
+[36mINFO   [0m Start basic line by line comparison          
+[33mWARNING[0m Line: line2 not found in: file2.txt line: 1  
+[33mWARNING[0m Line: line4 not found in: file1.txt line: 2  
+[33mWARNING[0m File: file1.txt has difference with: file2.txt 
+[36mINFO   [0m Write diff file: ./test_report.txt           
+[33mWARNING[0m Files: file1.txt and: file2.txt are differents. 
+[36mINFO   [0m Start basic line by line comparison          
+[33mWARNING[0m Line: line2 not found in: file2.txt line: 1  
+[33mWARNING[0m Line: line4 not found in: file1.txt line: 2  
+[33mWARNING[0m File: file1.txt has difference with: file2.txt 
