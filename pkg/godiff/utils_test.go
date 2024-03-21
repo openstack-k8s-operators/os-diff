@@ -234,23 +234,6 @@ func TestCompareYAMLEqualMaps(t *testing.T) {
 	}
 }
 
-//func TestCompareYAMLInvalidYAML(t *testing.T) {
-//	origin := []byte(`
-//		key1: value1
-//		key2: value2
-//	`)
-//	dest := []byte(`
-//		key1: value1
-//		key2: value2
-//		invalid: yaml
-//	`)
-//	expectedError := "Error unmarshalling"
-//	report, err := CompareYAML(origin, dest)
-//	if err == nil || !reflect.DeepEqual(err.Error(), expectedError) {
-//		t.Errorf("Expected error: %v, got: %v", expectedError, err)
-//	}
-//}
-
 // Test case for function CompareJSON
 func TestCompareJSON(t *testing.T) {
 	// Test case for comparing two identical JSON objects
@@ -326,27 +309,4 @@ func TestCompareRawData(t *testing.T) {
 	if !reflect.DeepEqual(report, expectedReport) {
 		t.Errorf("Report mismatch, expected: %v, got: %v", expectedReport, report)
 	}
-}
-
-// Test case for function GetConfigFromRemote
-func TestGetConfigFromRemote(t *testing.T) {
-	remoteCmd := "ssh user@hostname"     // Change this according to the remote command
-	configPath := "/path/to/config/file" // Change this according to the config file path
-
-	// Test case for successful execution
-	t.Run("Success", func(t *testing.T) {
-		_, err := GetConfigFromRemote(remoteCmd, configPath)
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
-	})
-
-	// Test case for error scenario
-	t.Run("Error", func(t *testing.T) {
-		invalidCmd := "invalidCmd"
-		_, err := GetConfigFromRemote(invalidCmd, configPath)
-		if err == nil {
-			t.Error("Expected an error, got nil")
-		}
-	})
 }
