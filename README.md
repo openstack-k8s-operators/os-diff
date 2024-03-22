@@ -224,30 +224,7 @@ type YourServiceName struct {
     }
   }
 }
-
-func LoadYourServiceNameOpenShiftConfig(configPath string) string {
-	var sb strings.Builder
-	var yourService YourService
-
-	yamlFile, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		panic(err)
-	}
-
-	err = yaml.Unmarshal(yamlFile, &yourService)
-	if err != nil {
-		panic(err)
-	}
-	if strings.HasPrefix(yourService.Spec.YourServiceName.Template.CustomServiceConfig, "[") {
-		sb.WriteString(yourService.Spec.YourServiceName.Template.CustomServiceConfig)
-	}
-	return cleanIniSections(sb.String())
-}
 ```
-
-* The function `LoadYourServiceNameOpenShiftConfig` is made to extract the configmap Ini parameters for your OpenStack service. All the config parameters you want to extract should be declare here.
-
-
 ### Asciinema demo
 
 https://asciinema.org/a/618124
