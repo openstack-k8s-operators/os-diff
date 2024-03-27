@@ -1,6 +1,8 @@
 # OS-diff
 OpenStack / OpenShift diff tool
 
+
+
 This tool collects OpenStack/OpenShift service configurations,
 compares configuration files, makes a diff and creates a report to the user
 in order to provide informations and warnings after a migration from
