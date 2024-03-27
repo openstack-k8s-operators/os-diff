@@ -17,7 +17,6 @@
 package godiff
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -25,52 +24,9 @@ import (
 	"strings"
 
 	"github.com/go-ini/ini"
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"gopkg.in/yaml.v3"
 )
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func sliceIndex(element string, data []string) int {
-	for k, v := range data {
-		if element == v {
-			return k
-		}
-	}
-	return -1
-}
-
-func isIni(data []byte) bool {
-	if data[0] == '[' {
-		return true
-	}
-	return false
-}
-
-func isYaml(data []byte) bool {
-	var yamlData interface{}
-	err := yaml.Unmarshal(data, &yamlData)
-	if err == nil {
-		return true
-	}
-	return false
-}
-
-func isJson(data []byte) bool {
-	var jsonData interface{}
-	err := json.Unmarshal(data, &jsonData)
-	if err == nil {
-		// fmt.Errorf("Faild to unmarshal json file %s", err)
-		return true
-	}
-	return false
-}
 
 func CompareYAML(origin []byte, dest []byte) ([]string, error) {
 
@@ -128,17 +84,18 @@ func CompareJSON(orgData, destData interface{}, path string) ([]string, error) {
 		destData := destData.(map[string]interface{})
 		for key, value := range orgData {
 			if value2, ok := destData[key]; ok {
-				CompareJSON(value, value2, path+"."+key)
+				results, _ := CompareJSON(value, value2, path+"."+key)
+				diff = append(diff, results...)
 			} else {
 				//fmt.Println("Key %s not found in second JSON\n", path+"."+key)
-				msg = fmt.Sprintf("+%s", key)
+				msg = fmt.Sprintf("-%s", key)
 				diff = append(diff, msg)
 			}
 		}
 		for key := range destData {
 			if _, ok := orgData[key]; !ok {
 				//fmt.Println("Key %s not found in first JSON\n", path+"."+key)
-				msg = fmt.Sprintf("-%s", key)
+				msg = fmt.Sprintf("+%s", key)
 				diff = append(diff, msg)
 			}
 		}
@@ -149,10 +106,14 @@ func CompareJSON(orgData, destData interface{}, path string) ([]string, error) {
 			return diff, fmt.Errorf("Array length mismatch at %s: %d != %d\n", path, len(orgData), len(destData))
 		}
 		for i := range orgData {
-			CompareJSON(orgData[i], destData[i], fmt.Sprintf("%s[%d]", path, i))
+			results, _ := CompareJSON(orgData[i], destData[i], fmt.Sprintf("%s[%d]", path, i))
+			diff = append(diff, results...)
+			return diff, nil
 		}
 	default:
 		if !reflect.DeepEqual(orgData, destData) {
+			msg = fmt.Sprintf("-%s +%s", orgData, destData)
+			diff = append(diff, msg)
 			//fmt.Println("Value mismatch at %s: %v != %v\n", path, orgData, destData)
 			return diff, nil
 		}
@@ -185,7 +146,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 		sec2, err := cfg2.GetSection(sec1.Name())
 		if err != nil {
 			msg := fmt.Sprintf("-[%s]\n", sec1.Name())
-			if !stringInSlice(msg, report) {
+			if !common.StringInSlice(msg, report) {
 				diffFound = true
 				log.Warn("Difference detected. Section: ", sec1.Name(), " not found in:", dest)
 				report = append(report, msg)
@@ -199,7 +160,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 				} else {
 					msg = fmt.Sprintf("-%s=%s\n", key1.Name(), key1.Value())
 				}
-				if !stringInSlice(msg, report) {
+				if !common.StringInSlice(msg, report) {
 					diffFound = true
 					log.Warn("Difference detected. Section: ", sec1.Name(), " Key ", key1.Name(), " not found in:", dest)
 					report = append(report, msg)
@@ -214,7 +175,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 					} else {
 						msg = fmt.Sprintf("-%s=%s\n", key1.Name(), key1.Value())
 					}
-					if !stringInSlice(msg, report) {
+					if !common.StringInSlice(msg, report) {
 						diffFound = true
 						log.Warn("Difference detected. Section: ", sec1.Name(), " Key ", key1.Name(), " not found in:", dest)
 						report = append(report, msg)
@@ -233,7 +194,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 					} else {
 						msg = fmt.Sprintf("-%s=%s\n+%s=%s\n", key1.Name(), key1.Value(), key2.Name(), key2.Value())
 					}
-					if !stringInSlice(msg, report) {
+					if !common.StringInSlice(msg, report) {
 						diffFound = true
 						log.Warn("Difference detected: Values are not equal: ",
 							key1.Value(), " and ", key2.Value(),
@@ -254,7 +215,7 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 					} else {
 						msg = fmt.Sprintf("+%s=%s\n", key2.Name(), key2.Value())
 					}
-					if !stringInSlice(msg, report) {
+					if !common.StringInSlice(msg, report) {
 						diffFound = true
 						log.Warn("Difference detected -- Section: ", sec2.Name(), " Key ", key2.Name(), " not found in:", dest)
 						report = append(report, msg)
@@ -268,14 +229,14 @@ func CompareIni(rawdata1 []byte, rawdata2 []byte, origin string, dest string, ve
 		_, err := cfg1.GetSection(sec2.Name())
 		if err != nil {
 			msg := fmt.Sprintf("-[%s]\n", sec2.Name())
-			if !stringInSlice(msg, report) {
+			if !common.StringInSlice(msg, report) {
 				diffFound = true
 				log.Warn("Difference detected. Section: ", sec2.Name(), " not found in:", dest)
 				report = append(report, msg)
 			}
 			for _, key2 := range sec2.Keys() {
 				msg = fmt.Sprintf("-%s=%s\n", key2.Name(), key2.Value())
-				if !stringInSlice(msg, report) {
+				if !common.StringInSlice(msg, report) {
 					log.Warn("Difference detected -- Section: ", sec2.Name(), " Key ", key2.Name(), " not found in:", dest)
 					report = append(report, msg)
 				}
@@ -313,9 +274,9 @@ func CompareRawData(rawdata1 []byte, rawdata2 []byte, origin string, dest string
 				}
 			}
 			if !found {
-				log.Warn("Line: ", line1, " not found in: ", dest, " line: ", i)
-				msg = fmt.Sprintf("@@ line: %d\n", i)
-				if !stringInSlice(msg, report) {
+				log.Warn("Line: ", line1, " not found in: ", dest, " line: ", i+1)
+				msg = fmt.Sprintf("@ line: %d\n", i+1)
+				if !common.StringInSlice(msg, report) {
 					report = append(report, msg)
 				}
 				msg = fmt.Sprintf("+%s\n", line1)
@@ -339,14 +300,14 @@ func CompareRawData(rawdata1 []byte, rawdata2 []byte, origin string, dest string
 				}
 			}
 			if !found {
-				log.Warn("Line: ", line2, " not found in: ", origin, " line: ", i)
-				msg = fmt.Sprintf("@@ line: %d\n", i)
-				if !stringInSlice(msg, report) {
+				log.Warn("Line: ", line2, " not found in: ", origin, " line: ", i+1)
+				msg = fmt.Sprintf("@ line: %d\n", i+1)
+				if !common.StringInSlice(msg, report) {
 					report = append(report, msg)
 					msg = fmt.Sprintf("-%s\n", line2)
 					report = append(report, msg)
 				} else {
-					index = sliceIndex(msg, report)
+					index = common.SliceIndex(msg, report)
 					msg = fmt.Sprintf("-%s\n", line2)
 					report = append(report[:index+2], msg)
 				}

@@ -24,13 +24,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 )
 
 var Reset = "\033[0m"
 var Red = "\033[31m"
 var Green = "\033[32m"
 
-func writeReport(content []string, reportPath string) error {
+func WriteReport(content []string, reportPath string) error {
 
 	path, _ := filepath.Split(reportPath)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -98,7 +100,7 @@ func CompareFiles(origin string, dest string, print bool, verbose bool) ([]strin
 		return nil, errors.New("Failed to open file: '" + dest + "'. " + err.Error())
 	}
 	// Detect type
-	if isIni(orgContent) && isIni(destContent) {
+	if common.IsIni(orgContent) && common.IsIni(destContent) {
 		log.Info("Files detected as Ini files, start to process contents")
 		report, err = CompareIni(orgContent, destContent, origin, dest, verbose)
 		// if error occur, try to make a basic diff
@@ -109,7 +111,7 @@ func CompareFiles(origin string, dest string, print bool, verbose bool) ([]strin
 				dest, " try to compare as a standard type...")
 			report, _ = CompareRawData(orgContent, destContent, origin, dest)
 		}
-	} else if isJson(orgContent) && isJson(destContent) {
+	} else if common.IsJson(orgContent) && common.IsJson(destContent) {
 		log.Info("Files detected as JSON files, start to process contents")
 		report, err = CompareJSONFiles(orgContent, destContent)
 		if err != nil {
@@ -119,7 +121,7 @@ func CompareFiles(origin string, dest string, print bool, verbose bool) ([]strin
 				dest, " try to compare as a standard type...")
 			report, _ = CompareRawData(orgContent, destContent, origin, dest)
 		}
-	} else if isYaml(orgContent) && isYaml(destContent) {
+	} else if common.IsYaml(orgContent) && common.IsYaml(destContent) {
 		log.Info("Files detected as YAML files, start to process contents")
 		report, err = CompareYAML(orgContent, destContent)
 		if err != nil {
@@ -136,7 +138,7 @@ func CompareFiles(origin string, dest string, print bool, verbose bool) ([]strin
 	}
 	filePath := origin + ".diff"
 	if len(report) != 0 {
-		err = writeReport(report, filePath)
+		err = WriteReport(report, filePath)
 		if err != nil {
 			log.Error("Error while trying to create diff file in the file system: ", filePath)
 			fmt.Println(err)

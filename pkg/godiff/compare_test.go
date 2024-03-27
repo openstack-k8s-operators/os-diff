@@ -1,4 +1,20 @@
-package godiff
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright 2023 Red Hat, Inc.
+ *
+ */
+package godiff_test
 
 import (
 	"io/ioutil"
@@ -6,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +31,7 @@ func TestWriteReport(t *testing.T) {
 	content := []string{"line 1", "line 2", "line 3"}
 	reportPath := "./test_report.txt"
 
-	err := writeReport(content, reportPath)
+	err := godiff.WriteReport(content, reportPath)
 
 	assert.NoError(t, err)
 
@@ -70,7 +87,7 @@ func TestPrintReport(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := PrintReport(test.report)
+			err := godiff.PrintReport(test.report)
 			if err != nil {
 				t.Errorf("PrintReport() error = %v, want nil", err)
 			}
@@ -81,13 +98,12 @@ func TestPrintReport(t *testing.T) {
 // Test case for function CompareJSONFiles
 func TestCompareJSONFiles(t *testing.T) {
 	originJSON := []byte(`{"key1": "value1"}`)
-	destJSON := []byte(`{"key1": "value1"}`)
+	destJSON := []byte(`{"key1": "value2"}`)
 
-	expectedReport := []string{}
+	expectedReport := []string{"-value1 +value2"}
 	expectedErr := error(nil)
 
-	report, err := CompareJSONFiles(originJSON, destJSON)
-
+	report, err := godiff.CompareJSONFiles(originJSON, destJSON)
 	if !reflect.DeepEqual(report, expectedReport) {
 		t.Errorf("Report does not match expected value. Got: %v, Want: %v", report, expectedReport)
 	}
@@ -97,8 +113,8 @@ func TestCompareJSONFiles(t *testing.T) {
 	}
 
 	// Test unmarshalling error case
-	invalidJSON := []byte(`{"key1": "value1"}`)
-	_, err = CompareJSONFiles(invalidJSON, destJSON)
+	invalidJSON := []byte(`{"key1" "value1"}`)
+	_, err = godiff.CompareJSONFiles(invalidJSON, destJSON)
 	if err == nil {
 		t.Errorf("Expected error when unmarshalling invalid JSON but got nil")
 	}

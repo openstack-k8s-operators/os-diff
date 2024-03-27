@@ -96,6 +96,20 @@ func TestSshConnection(sshCmd string) bool {
 	return true
 }
 
+func TestEqualSlice(a []string, b []string) bool {
+	if len(a) != len(b) {
+		fmt.Println(len(a), len(b))
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			fmt.Println(a[i], b[i])
+			return false
+		}
+	}
+	return true
+}
+
 func StringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
@@ -103,6 +117,15 @@ func StringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func SliceIndex(element string, data []string) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1
 }
 
 func GetNestedFieldValue(data interface{}, keyName string) interface{} {

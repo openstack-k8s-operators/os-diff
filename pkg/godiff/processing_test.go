@@ -1,24 +1,28 @@
-package godiff
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright 2023 Red Hat, Inc.
+ *
+ */
+package godiff_test
 
 import (
-	"bytes"
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/openstack-k8s-operators/os-diff/pkg/godiff"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestLogOutput(t *testing.T) {
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	logrus.Info("test message")
-
-	expected := "INFO[0000] test message\n"
-	if buf.String() != expected {
-		t.Errorf("Log output does not match expected. Got: %s, want: %s", buf.String(), expected)
-	}
-}
 
 func TestFilesEqual(t *testing.T) {
 	// Create temporary test files with same content
@@ -37,7 +41,7 @@ func TestFilesEqual(t *testing.T) {
 	defer os.Remove(file2)
 
 	// Test filesEqual function with identical files
-	result, err := filesEqual(file1, file2)
+	result, err := godiff.FilesEqual(file1, file2)
 	assert.NoError(t, err)
 	assert.True(t, result)
 
@@ -48,7 +52,7 @@ func TestFilesEqual(t *testing.T) {
 	}
 
 	// Test filesEqual function with different files
-	result, err = filesEqual(file1, file2)
+	result, err = godiff.FilesEqual(file1, file2)
 	assert.NoError(t, err)
 	assert.False(t, result)
 }
