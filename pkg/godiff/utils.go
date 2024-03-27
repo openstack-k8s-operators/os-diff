@@ -63,7 +63,7 @@ func CompareYAML(origin []byte, dest []byte) ([]string, error) {
 		for key := range map2 {
 			_, isEqual := map1[key]
 			if !isEqual {
-				msg = fmt.Sprintf("-%v: %v\n", key, map2[key])
+				msg = fmt.Sprintf("+%v: %v\n", key, map2[key])
 				report = append(report, msg)
 			}
 		}
