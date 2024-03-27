@@ -16,3 +16,7 @@ clean:
 # run linter
 lint:
 	golangci-lint run --enable-all
+
+# run unit tests
+test:
+	go test -v ./...

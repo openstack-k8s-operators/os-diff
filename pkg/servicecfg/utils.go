@@ -95,7 +95,7 @@ func GetOCConfigMap(configMapName string) ([]byte, error) {
 		}
 		return output, nil
 	}
-	return nil, fmt.Errorf("OC is not connected, you need to logged in before.")
+	return nil, fmt.Errorf("oc is not connected, you need to logged in before")
 }
 
 func RemoteStatDir(sshCmd string, path string) (bool, error) {
@@ -110,7 +110,7 @@ func RemoteStatDir(sshCmd string, path string) (bool, error) {
 	} else if strings.Contains("directory", string(output)) {
 		return true, nil
 	}
-	return false, fmt.Errorf("Unable to stat: ", path)
+	return false, fmt.Errorf("unable to stat: %s", path)
 }
 
 func LoadServiceConfig(file string) ([]byte, error) {

@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/openstack-k8s-operators/os-diff/pkg/common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -60,7 +61,7 @@ func init() {
 	}
 }
 
-func filesEqual(file1, file2 string) (bool, error) {
+func FilesEqual(file1, file2 string) (bool, error) {
 	/*
 		Compare hashes of file1 and file2 and return a boolean:
 		true if files are equal,
@@ -180,7 +181,7 @@ func (p *GoDiffDataStruct) Process(dir1 string, dir2 string) error {
 		}
 		file2, err := os.Stat(path2)
 		if err != nil {
-			if !stringInSlice(path, p.missingPath) {
+			if !common.StringInSlice(path, p.missingPath) {
 				if file1.IsDir() {
 					log.Info("Directory is missing: ", path, "\n")
 					p.missingPath = append(p.missingPath, path)
@@ -193,25 +194,25 @@ func (p *GoDiffDataStruct) Process(dir1 string, dir2 string) error {
 			}
 		} else {
 			if file1.IsDir() && !file2.IsDir() {
-				if !stringInSlice(path, p.wrongTypeInOrg) {
+				if !common.StringInSlice(path, p.wrongTypeInOrg) {
 					log.Warn("File: ", path, "and: ", path2, " have different type (directory vs file)")
 					p.wrongTypeInOrg = append(p.wrongTypeInOrg, path)
 				}
 			}
 			if !file1.IsDir() && file2.IsDir() {
-				if !stringInSlice(path, p.wrongTypeInDest) {
+				if !common.StringInSlice(path, p.wrongTypeInDest) {
 					log.Warn("File: ", path, "and: ", path2, " have different type (directory vs file)")
 					p.wrongTypeInDest = append(p.wrongTypeInDest, path2)
 				}
 			}
 			if !file1.IsDir() && !file2.IsDir() {
-				check, err := filesEqual(path, path2)
+				check, err := FilesEqual(path, path2)
 				if err != nil {
 					return err
 				}
 				if !check {
 					// Compare the two files
-					if !stringInSlice(path, p.unmatchFile) {
+					if !common.StringInSlice(path, p.unmatchFile) {
 						p.unmatchFile = append(p.unmatchFile, path)
 						report, err := CompareFiles(path, path2, false, true)
 						if err != nil {
@@ -219,10 +220,10 @@ func (p *GoDiffDataStruct) Process(dir1 string, dir2 string) error {
 						}
 
 						if report != nil {
-							if !stringInSlice(path, p.unmatchFile) {
+							if !common.StringInSlice(path, p.unmatchFile) {
 								p.unmatchFile = append(p.unmatchFile, path)
 							}
-							if !stringInSlice(path2, p.unmatchFile) {
+							if !common.StringInSlice(path2, p.unmatchFile) {
 								p.unmatchFile = append(p.unmatchFile, path2)
 							}
 						}
