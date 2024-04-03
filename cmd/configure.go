@@ -30,8 +30,13 @@ var etc bool
 var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "Configure os-diff before running the diff command",
-	Long: `Config helpers, configure os-diff before running the diff command, example:
-	./os-diff configure --inventory inventory --output ssh_config -y`,
+	Long: `Config helpers, configure os-diff before running the diff command, examples:
+	from txt/ini format:
+	./os-diff configure --inventory inventory --output ssh_config
+	from /etc/hosts format:
+	./os-diff configure --inventory inventory --output ssh_config --etc
+	from yaml format:
+	./os-diff configure --inventory inventory --output ssh_config --yaml`,
 	Run: func(cmd *cobra.Command, args []string) {
 		common.BuildSshConfigFile(inventoryFile, sshConfig, yaml, etc)
 	},
