@@ -39,13 +39,6 @@ type Group struct {
 	Vars  map[string]interface{}       `yaml:"vars"`
 }
 
-// type Inventory struct {
-// 	All struct {
-// 		Children  map[string]Group             `yaml:"children"`
-// 		Ungrouped map[string]AnsibleHostStruct `yaml:"ungrouped"`
-// 	} `yaml:"all"`
-// }
-
 type Inventory map[string]Group
 
 // Host structure for ssh config file
@@ -76,8 +69,6 @@ func BuildSshConfigFileFromEtcHosts(etcHostsFile string, sshConfigFile string) e
 		fmt.Println("Error opening file:", err)
 		return err
 	}
-
-	// Create SSH config file
 	sshCfgFile, err := os.Create(sshConfigFile)
 	if err != nil {
 		fmt.Println("Error creating ssh config file:", err)
@@ -92,7 +83,6 @@ func BuildSshConfigFileFromEtcHosts(etcHostsFile string, sshConfigFile string) e
 		if strings.HasPrefix(line, "#") || len(strings.TrimSpace(line)) == 0 {
 			continue
 		}
-		// Split the line into fields
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue
@@ -105,37 +95,29 @@ func BuildSshConfigFileFromEtcHosts(etcHostsFile string, sshConfigFile string) e
 		sshConfig.HostName = fields[1]
 		writeHostConfig(sshCfgFile, sshConfig)
 	}
-
 	return nil
 }
 
 func BuildSshConfigFileFromYaml(inventoryFile string, sshConfigFile string) error {
-	// Open the inventory file
 	data, err := ioutil.ReadFile(inventoryFile)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return err
 	}
-
-	// Parse the YAML file
 	var inventory Inventory
 	err = yaml.Unmarshal(data, &inventory)
 	if err != nil {
 		fmt.Println("Error parsing YAML:", err)
 		return err
 	}
-
-	// Create SSH config file
 	sshCfgFile, err := os.Create(sshConfigFile)
 	if err != nil {
 		fmt.Println("Error creating ssh config file:", err)
 		return err
 	}
 	var sshConfig *Host
-	// Iterate over the groups and hosts
 	for _, group := range inventory {
 		for hostName, host := range group.Hosts {
-			// Write the host configuration to the SSH config file
 			sshConfig = &Host{Name: hostName}
 			if host.AnsibleHost != "" {
 				sshConfig.HostName = host.AnsibleHost
@@ -171,12 +153,9 @@ func BuildSshConfigFileFromIni(inventoryFile string, sshConfigFile string) error
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			continue
 		}
-
-		// Split host and parameters
 		parts := strings.Split(line, " ")
 		hostName := parts[0]
 		parameters := parts[1:]
-
 		if sshConfig != nil {
 			writeHostConfig(sshCfgFile, sshConfig)
 		}
@@ -196,7 +175,6 @@ func BuildSshConfigFileFromIni(inventoryFile string, sshConfigFile string) error
 		}
 
 	}
-	// Write configuration for the last host
 	if sshConfig != nil {
 		writeHostConfig(sshCfgFile, sshConfig)
 	}
