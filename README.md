@@ -3,14 +3,14 @@ OpenStack / OpenShift diff tool
 
 This tool collects OpenStack/OpenShift service configurations,
 compares configuration files, makes a diff and creates a report to the user
-in order to provide informations and warnings after a migration from
+in order to provide information and warnings after a migration from
 OpenStack to OpenStack on OpenShift migration.
 
 ### Usage
 
 #### Pull configuration step
 
-Before running the Pull command you need to configure the ssh access to your environements (OpenStack and OCP).
+Before running the Pull command you need to configure the SSH access to your environments (OpenStack and OCP).
 Edit os-diff.cfg and/or the ssh.config provided with this project and make sure you can ssh on your hosts 
 without password or host key verification, with the command:
 
@@ -19,14 +19,13 @@ ssh -F ssh.config crc
 ssh -F ssh.config standalone
 ```
 
-When everything is setup correctly you can tweak the config.yaml file at the root of the project which contain the description
-of the services you want to extract configurations:
+When everything is setup correctly you can tweak the config.yaml file at the root of the project which will contain the description of the services you want to extract configuration from:
 
 ```
   config.yaml
 ```
 
-You can add your own service according to the following:
+You can add your own service(s) according to the following:
 
 ```
   # Service name
@@ -94,8 +93,8 @@ Run the compare command:
 
 ### Examples:
 
-diff command compare file to file only and ouput a diff with color on the console.
-Example for Yaml file:
+diff command compares file to file only and ouput a diff with color on the console.
+Example for YAML file:
 
 ```diff
 ./os-diff diff tests/podman/key.yaml tests/ocp/key.yaml
@@ -137,10 +136,10 @@ Source file path: /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf, 
 
 ### OpenShift Pod config comparison
 
-When you prepare the adoption of your TripleO cloud to your OpenShift cluster, you might want to compare and verify if the config describe in your OpenShift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the OpenShift config, the service is correctly configured.
+When you prepare the adoption of your TripleO cloud to your OpenShift cluster, you might want to compare and verify if the config described in your OpenShift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the OpenShift config, the service is correctly configured.
 
-The service command allow you to compare Yaml OpenShift config patch with OpenStack Ini configuration file from your services.
-You can also query OpenShift pods to check if the configuration are well set.
+The service command allow you to compare YAML OpenShift config patch with OpenStack Ini configuration file from your services.
+You can also query OpenShift pods to check if the configuration are correct.
 
 Example:
 

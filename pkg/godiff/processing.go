@@ -99,7 +99,7 @@ func FilesEqual(file1, file2 string) (bool, error) {
 
 	// Compare the hashes of the files
 	if hash1 != hash2 {
-		log.Warn("Files: ", file1, " and: ", file2, " are differents.")
+		log.Warn("Files: ", file1, " and: ", file2, " are different.")
 		return false, nil
 	}
 	return true, nil
