@@ -85,7 +85,7 @@ func initConfig(cmd *cobra.Command) error {
 func CheckFilesPresence(configFile string) string {
 	_, err := os.Stat(configFile)
 	if err == nil {
-		fmt.Println("Found " + configFile + " in the current working directory.")
+		fmt.Println("Found " + configFile + " ... using it !")
 		return configFile
 	}
 
@@ -94,12 +94,12 @@ func CheckFilesPresence(configFile string) string {
 	etcConfigFile := filepath.Join("/etc/os-diff/", configFile)
 	_, err = os.Stat(etcConfigFile)
 	if err == nil {
-		fmt.Println("Found os-diff.cfg in /etc/os-diff/.")
+		fmt.Println("Found os-diff.cfg in /etc/os-diff/ ... using it !")
 		return etcConfigFile
 	}
 
 	// If config.yaml doesn't exist in both locations, raise an error and end the program
-	fmt.Println("Error: config.yaml not found in the current working directory or /etc/os-diff.")
+	fmt.Println("Error: " + configFile + "not found. Unable to find it in the current working directory or /etc/os-diff.")
 	os.Exit(1)
 	return ""
 }
