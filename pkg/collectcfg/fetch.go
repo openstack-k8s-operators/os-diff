@@ -201,10 +201,8 @@ func PullPodFiles(podId string, containerName string, remotePath string, localPa
 
 func SyncConfigDir(localPath string, remotePath string, sshCmd string, undercloud string) error {
 	// make sure localPath exists
-	mkCmd := "mkdir -p " + localPath
-	output, err := common.ExecCmdSimple(mkCmd)
+	err := os.MkdirAll(localPath, os.ModePerm)
 	if err != nil {
-		fmt.Println(output)
 		return err
 	}
 	hosts := GetListHosts(undercloud)
