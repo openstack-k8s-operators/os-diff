@@ -213,10 +213,13 @@ func TestBuildFullSshCmdWithoutHost(t *testing.T) {
 	host := "example.com"
 	expected := "ssh -i key.pem user@example.com"
 
-	fullCmd := common.BuildFullSshCmd(sshCmd, host)
+	fullCmd, directorHost, _ := common.BuildFullSshCmd(sshCmd, host)
 
 	if fullCmd != expected {
 		t.Errorf("Unexpected full command, got: %s, want: %s", fullCmd, expected)
+	}
+	if directorHost != "example.com" {
+		t.Errorf("Unexpected director host, got: %s, want: %s", directorHost, "example.com")
 	}
 }
 
@@ -225,21 +228,93 @@ func TestBuildFullSshCmdWithHost(t *testing.T) {
 	host := "example.com"
 	expected := "ssh -i key.pem user@example.com"
 
-	fullCmd := common.BuildFullSshCmd(sshCmd, host)
+	fullCmd, directorHost, _ := common.BuildFullSshCmd(sshCmd, host)
 
 	if fullCmd != expected {
 		t.Errorf("Unexpected full command, got: %s, want: %s", fullCmd, expected)
 	}
+	if directorHost != "example.com" {
+		t.Errorf("Unexpected director host, got: %s, want: %s", directorHost, "example.com")
+	}
 }
 
-func TestBuildFullSshCmd(t *testing.T) {
-	sshCmd := "ssh -F config "
+func TestBuildFullSshCmdWithOutDirectorHost(t *testing.T) {
+	sshCmd := "ssh -i key.pem user@example.com"
+	host := ""
+	expected := "ssh -i key.pem user@example.com"
+
+	fullCmd, directorHost, _ := common.BuildFullSshCmd(sshCmd, host)
+
+	if fullCmd != expected {
+		t.Errorf("Unexpected full command, got: %s, want: %s", fullCmd, expected)
+	}
+	if directorHost != "example.com" {
+		t.Errorf("Unexpected director host, got: %s, want: %s", directorHost, "example.com")
+	}
+}
+
+func TestBuildFullSshCmdWithWhiteSpaces(t *testing.T) {
+	sshCmd := "ssh -F   config  "
 	host := "example.com"
 	expected := "ssh -F config example.com"
 
-	fullCmd := common.BuildFullSshCmd(sshCmd, host)
+	fullCmd, directorHost, _ := common.BuildFullSshCmd(sshCmd, host)
 
-	if fullCmd == expected {
+	if fullCmd != expected {
 		t.Errorf("Unexpected full command, got: %s, want: %s", fullCmd, expected)
+	}
+	if directorHost != "example.com" {
+		t.Errorf("Unexpected director host, got: %s, want: %s", directorHost, "example.com")
+	}
+}
+
+func TestBuildFullSshCmdEmptyHost(t *testing.T) {
+	sshCmd := "ssh -F config example.com"
+	host := ""
+	expected := "ssh -F config example.com"
+
+	fullCmd, directorHost, _ := common.BuildFullSshCmd(sshCmd, host)
+
+	if fullCmd != expected {
+		t.Errorf("Unexpected full command, got: %s, want: %s", fullCmd, expected)
+	}
+	if directorHost != "example.com" {
+		t.Errorf("Unexpected director host, got: %s, want: %s", directorHost, "example.com")
+	}
+}
+
+func TestBuildFullSshCmdWrongExtraArg(t *testing.T) {
+	sshCmd := "ssh -F config example.com ls"
+	host := ""
+
+	_, _, err := common.BuildFullSshCmd(sshCmd, host)
+
+	expectedError := "error: Too many arguments after -F option"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Unexpected error, got: %v, want: %s", err, expectedError)
+	}
+}
+
+func TestBuildFullSshCmdWrongHost(t *testing.T) {
+	sshCmd := "ssh -i key.pem root@foo"
+	host := "example.com"
+
+	_, _, err := common.BuildFullSshCmd(sshCmd, host)
+
+	expectedError := "error: The host in the sshCmd foo does not match the directorHost example.com"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Unexpected error, got: %v, want: %s", err, expectedError)
+	}
+}
+
+func TestBuildFullSshCmdWrongHostWithConfig(t *testing.T) {
+	sshCmd := "ssh -F config foo"
+	host := "example.com"
+
+	_, _, err := common.BuildFullSshCmd(sshCmd, host)
+
+	expectedError := "error: The host in the ssh_cmd: foo does not match the director_host: example.com"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Unexpected error, got: %v, want: %s", err, expectedError)
 	}
 }

@@ -72,7 +72,11 @@ This command will populate the config.yaml file with the podman and image Ids an
 		} else if cloud == "tripleo" {
 			// TRIPLEO Settings:
 			sshCmd := config.Tripleo.SshCmd
-			fullCmd := common.BuildFullSshCmd(sshCmd, config.Tripleo.DirectorHost)
+			fullCmd, directorHost, err := common.BuildFullSshCmd(sshCmd, config.Tripleo.DirectorHost)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			remoteConfigDir := config.Tripleo.RemoteConfigPath
 			localConfigDir := config.Tripleo.LocalConfigPath
 			if !common.TestSshConnection(fullCmd) {
@@ -85,7 +89,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 					return
 				}
 			}
-			err := collectcfg.FetchConfigFromEnv(configPath, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, config.Tripleo.DirectorHost, filters)
+			err = collectcfg.FetchConfigFromEnv(configPath, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, directorHost, filters)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return
