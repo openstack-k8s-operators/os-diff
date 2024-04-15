@@ -8,6 +8,145 @@ OpenStack to OpenStack on OpenShift migration.
 
 ### Usage
 
+#### Setup our environment
+
+##### Setup Ssh access
+
+In order to allow Os-diff to connect to our clouds and pull files from the services you describe in the `config.yaml`file you need to properly set the option in the `os-diff.cfg`:
+
+```
+[Default]
+
+local_config_dir=/tmp/
+service_config_file=config.yaml
+
+[Tripleo]
+
+ssh_cmd=ssh -F ssh.config
+director_host=standalone
+container_engine=podman
+connection=ssh
+remote_config_path=/tmp/tripleo
+local_config_path=/tmp/
+
+[Openshift]
+
+ocp_local_config_path=/tmp/ocp
+connection=local
+ssh_cmd=""
+
+```
+
+The `ssh_cmd` will be used by os-diff to access via ssh to your TripleO Undercloud/Director host or the host where your cloud is accessible and the podman/docker binary is installed and allowed to interract with the running containers.
+This option could have different form:
+
+```
+ssh_cmd=ssh -F ssh.config standalone
+director_host=
+```
+
+```
+ssh_cmd=ssh -F ssh.config
+director_host=standalone
+```
+
+or without a ssh config file:
+
+```
+ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local
+director_host=
+```
+
+or
+
+```
+ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@
+director_host=my.undercloud.local
+```
+
+Note that the concat of ssh_cmd + director_host should be a "successful ssh access".
+
+##### Generate ssh.config file from inventory or hosts file
+
+Os-diff can use an ssh.config file for getting access to your TripleO/OSP environment.
+A command can help you to generate this ssh config file from your Ansible inventory (like tripleo-ansible-inventory.yaml file):
+
+```
+os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
+```
+
+The ssh.config file will looks like this (for a Standalone deployment):
+
+```
+Host standalone
+  HostName standalone
+  User root
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host undercloud
+  HostName undercloud
+  User root
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+```
+
+Note: You will have to set the IdentityFile key in the file in order to get a fully working acces:
+
+```
+Host standalone
+  HostName standalone
+  User root
+  IdentityFile ~/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host undercloud
+  HostName undercloud
+  User root
+  IdentityFile ~/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+```
+
+#### Non-standard services settings
+
+It's important to configure correctly a ssh config file or equivalent for non standard services such as OVS.
+The ovs_external_ids is not a service which runs in a container and the ovs data are stored on each hosts of our cloud: controller_1/controller_2/...
+
+The hosts key in the config.yaml will allow os-diff to loop and get for all hosts specified the output of the command or the file or the data that you need to pull from our deployment in order to compare it later:
+
+```
+    ovs_external_ids:
+        path:
+            - ovs_external_ids.json
+        hosts:
+            - standalone
+```
+
+The `service_command` is the command which provides the required informations. It could a simple cat from a config file.
+`cat_output` should be set to true if you want os-diff to get the output of the command and stored the output in a file specified by the key `path`
+
+Then you can provide a mapping between, in this case the EDPM CRD and the ovs-vsctl output with `config_mapping`
+
+```
+        service_command: 'ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F '': '' ''{ print $2; }'''
+        cat_output: true
+        config_mapping:
+            ovn-bridge: edpm_ovn_bridge
+            ovn-bridge-mappings: edpm_ovn_bridge_mappings
+            ovn-encap-type: edpm_ovn_encap_type
+            ovn-match-northd-version: ovn_match_northd_version
+            ovn-monitor-all: ovn_monitor_all
+            ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
+            ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
+```
+Then you can use this command to compare the values:
+
+```
+os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
+```
+
 #### Pull configuration step
 
 Before running the Pull command you need to configure the SSH access to your environments (OpenStack and OCP).
