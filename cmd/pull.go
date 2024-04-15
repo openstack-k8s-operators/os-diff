@@ -72,7 +72,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 		} else if cloud == "tripleo" {
 			// TRIPLEO Settings:
 			sshCmd := config.Tripleo.SshCmd
-			fullCmd := sshCmd + " " + config.Tripleo.DirectorHost
+			fullCmd := common.BuildFullSshCmd(sshCmd, config.Tripleo.DirectorHost)
 			remoteConfigDir := config.Tripleo.RemoteConfigPath
 			localConfigDir := config.Tripleo.LocalConfigPath
 			if !common.TestSshConnection(fullCmd) {
