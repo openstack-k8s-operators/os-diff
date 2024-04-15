@@ -260,25 +260,19 @@ func FormatShellCommand(input string) []string {
 }
 
 func BuildFullSshCmd(sshCmd string, host string) string {
-
 	atIndex := strings.LastIndex(sshCmd, "@")
 	var fullCmd string
 
 	if atIndex == -1 {
-		// No "@" character in the string, just append the DirectorHost
 		fullCmd = sshCmd + " " + host
 	} else if atIndex == len(sshCmd)-1 {
-		// "@" is at the end of the string, append the DirectorHost
 		fullCmd = sshCmd + host
 	} else {
-		// "@" is not at the end of the string, check the host
 		cmdHost := sshCmd[atIndex+1:]
 		if cmdHost != host {
-			// The host in the sshCmd does not match the DirectorHost, exit with an error
 			fmt.Printf("Error: The host in the sshCmd (%s) does not match the DirectorHost (%s)\n", cmdHost, host)
 			os.Exit(1)
 		}
-		// The host in the sshCmd matches the DirectorHost, set fullCmd to sshCmd
 		fullCmd = sshCmd
 	}
 	return fullCmd
