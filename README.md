@@ -1,5 +1,5 @@
 # OS-diff
-OpenStack / OpenShift diff tool
+OpenStack/OpenShift diff tool
 
 This tool collects OpenStack/OpenShift service configurations,
 compares configuration files, makes a diff and creates a report to the user
@@ -151,12 +151,7 @@ os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 
 Before running the Pull command you need to configure the SSH access to your environments (OpenStack and OCP).
 Edit os-diff.cfg and/or the ssh.config provided with this project and make sure you can ssh on your hosts 
-without password or host key verification, with the command:
-
-```
-ssh -F ssh.config crc
-ssh -F ssh.config standalone
-```
+without password or host key verification, refer to the section below for more informations.
 
 When everything is setup correctly you can tweak the config.yaml file at the root of the project which will contain the description of the services you want to extract configuration from:
 
@@ -164,20 +159,32 @@ When everything is setup correctly you can tweak the config.yaml file at the roo
   config.yaml
 ```
 
+You can ask os-diff to automaticaly fill the config.yaml from your TripleO/OSP environment:
+
+```
+os-diff pull --update-only # will update your config.yaml but it won't pull the config
+
+os-diff pull --update      # will update the config.yaml and pull the configuration
+```
+
 You can add your own service(s) according to the following:
 
 ```
+services:
   # Service name
   keystone:
     # Bool to enable/disable a service (not implemented yet)
     enable: true
     # Pod name, in both OCP and podman context.
-    # It could be strict match with strict_pod_name_match set to true
-    # or by default it will just grep the podman and work with all the pods
-    # which matched with pod_name.
+    # It could be strict match or will only just grep the podman_name
+    # and work with all the pods which matched with pod_name.
+    # To enable/disable use strict_pod_name_match: true/false
     podman_name: keystone
     pod_name: keystone
     container_name: keystone-api
+    # pod options
+    # strict match for getting pod id in TripleO and podman context
+    strict_pod_name_match: false
     # Path of the config files you want to analyze.
     # It could be whatever path you want:
     # /etc/<service_name> or /etc or /usr/share/<something> or even /
@@ -189,25 +196,106 @@ You can add your own service(s) according to the following:
       - /etc/keystone
       - /etc/keystone/keystone.conf
       - /etc/keystone/logging.conf
+  ovs_external_ids:
+    hosts:
+      - standalone
+    service_command: "ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'"
+    cat_output: true
+    path:
+      - ovs_external_ids.json
+    config_mapping:
+      ovn-bridge-mappings: edpm_ovn_bridge_mappings
+      ovn-bridge: edpm_ovn_bridge
+      ovn-encap-type: edpm_ovn_encap_type
+      ovn-match-northd-version: ovn_match_northd_version
+      ovn-monitor-all: ovn_monitor_all
+      ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
+      ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
 ```
+
+Note that `ovs_external_ids`is a non-standard service. This service is not an Openstack services executed in a container, so the description and the behavior is different.
+You can refer to the section bellow for the non-standard configuration.
+OVS is an example, but you can simply add whatever your want to check on all your nodes.
+
+Lets take the example of checking the /etc/yum.conf on every hosts, you will have to put this statement in the config.yaml, lets call it `yum_config`
+
+```
+services:
+  yum_config:
+    hosts:
+      - undercloud
+      - controller_1
+      - compute_1
+      - compute_2
+    service_command: "cat /etc/yum.conf"
+    cat_output: true
+    path:
+      - yum.conf
+```
+
+Then when you will execute the pull command, you will get the content of your yum.conf file:
+
+```
+os-diff pull
+
+ls /tmp/tripleo/yum_config/undercloud/yum.conf
+
+# Make the diff with your yum.conf file:
+os-diff diff /tmp/tripleo/yum_config/undercloud/yum.conf /etc/yum.conf
+Source file path: /tmp/tripleo/yum_config/undercloud/yum.conf, difference with: /etc/yum.conf
+[main]
++sslverify=0
+```
+
+#### Build os-diff
 
 Once everything is correctly setup you can start to pull configuration:
 
 ```
-# build os-diff
+# You will need to install Golang before building
+export PATH=$PATH:/usr/local/go/bin
+# Build os-diff
 make build
-# run pull configuration for TripleO standalone:
-./os-diff pull --env=tripleo
-# run pull configuration for OCP with a specific output directory and a specific service config file:
-./os-diff pull -e ocp -o /tmp/myconfigdir -s my-service-config-file
+# Run pull configuration for TripleO standalone, by default the environment is TripleO/Openstack
+os-diff pull
+# Add --update if you want to update your config.yaml file.
+os-diff pull --update
+
+# Note that you can also pull configuration from Openshift Openstack operators if you have already deployed and adopted your cloud.
+# It could be useful to post check your configurations:
+os-diff pull -e ocp -o /tmp/myconfigdir -s my-service-config-file
 ```
 
 Note: The CLI arguments take precedence on the configuration file values.
 
 #### Compare configuration files steps
 
-Once you have collected all the data per services you need, you can start to run comparison between
-your two source directories.
+Os-diff provides multiple ways to compare files and directories.
+You can compare:
+  - file vs file
+  - directory vs directory (and sub directories)
+  - file vs CRD (Openshift custom resource definition)
+  - file from a running container vs file
+  - file from a running pod vs file
+  - do remote diff
+  - configmap vs file
+
+##### Simple files diff
+
+Files comparison is the most simplest way to use os-diff:
+
+```
+os-diff diff tripleo/keystone.conf ocp/keystone.conf
+```
+
+##### Directories diff
+
+Directory comparison and sub directory:
+
+```
+os-diff diff tripleo ocp
+```
+
 A results file is written at the root of this project `results.log` and a *.diff file is created for each
 file where a difference has been detected
 
@@ -223,12 +311,39 @@ Source file path: /tmp/collect_crc_configs/nova/nova-api-0/etc/nova/nova.conf, d
 ```
 
 The log INFO/WARN and ERROR will be print to the console as well so you can have colored info regarding the current file processing.
-Run the compare command:
+
+
+##### File Vs CRDs
+
+For file comparison with a CRD, you have to provide the --crd option.
+The name of the service might be needed if the service is describe in the config.yaml previoulsy configured, with a config mapping:
 
 ```
-./os-diff diff /tmp/collect_tripleo_configs /tmp/collect_crc_configs
+os-diff diff  examples/glance/glance.conf examples/glance/glance.patch --crd
+
+# With a config mapping in config.yaml:
+os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
+```
+
+Where the edpm.crd may looks like this:
 
 ```
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneNodeSet
+metadata:
+  name: openstack
+spec:
+  nodeTemplate:
+    ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+    managementNetwork: ctlplane
+    ansible:
+      ansibleVars:
+        edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
+        edpm_ovn_bridge: br-int
+```
+
+
+
 
 ### Examples:
 
