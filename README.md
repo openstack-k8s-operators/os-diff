@@ -459,6 +459,46 @@ Source file path: examples/glance/glance.patch, difference with: /tmp/glance.con
 -store_description=Ceph glance store backend.
 ```
 
+## CRD Generation from configuration file
+
+Os-diff can generate CRD file from a given configuration file with the following command:
+
+```
+os-diff gen --service glance --config my-conf.ini --output glance.patch
+YAML file generated:  glance.patch
+```
+
+Note that the `service` (Glance in this example), must be implemented in the servicecfg package in os-diff.
+Follow the instruction to add new services in the documentation
+
+### Add service
+
+If you want to add a new OpenStack service to this tool follow those instructions:
+
+* Convert your OpenShift configmap to a GO struct with:
+https://zhwt.github.io/yaml-to-go/
+* Create a <service-name>.go file into pkg/servicecfg/
+* Paste your generated structure and the following code:
+```
+package servicecfg
+
+import (
+	"io/ioutil"
+	"strings"
+
+	"gopkg.in/yaml.v2"
+)
+
+type YourServiceName struct {
+	Spec struct {
+		YourServiceName struct {
+      Template: {
+        CustomServiceConfig string `yaml:"customServiceConfig"`
+      }
+    }
+  }
+}
+```
 ### Asciinema demo
 
 https://asciinema.org/a/618124
