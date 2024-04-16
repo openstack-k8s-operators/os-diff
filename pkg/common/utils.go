@@ -120,6 +120,14 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
+func ToLowerSlice(data []string) []string {
+	var lowerData []string
+	for _, d := range data {
+		lowerData = append(lowerData, strings.ToLower(d))
+	}
+	return lowerData
+}
+
 func SliceIndex(element string, data []string) int {
 	for k, v := range data {
 		if element == v {
