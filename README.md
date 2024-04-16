@@ -6,13 +6,13 @@ compares configuration files, makes a diff and creates a report to the user
 in order to provide information and warnings after a migration from
 OpenStack to OpenStack on OpenShift migration.
 
-### Usage
+## Usage
 
-#### Setup our environment
+### Setup your environment
 
-##### Setup Ssh access
+#### Setup Ssh access
 
-In order to allow Os-diff to connect to our clouds and pull files from the services you describe in the `config.yaml`file you need to properly set the option in the `os-diff.cfg`:
+In order to allow Os-diff to connect to your clouds and pull files from the services you describe in the `config.yaml`file you need to properly set the option in the `os-diff.cfg`:
 
 ```
 [Default]
@@ -66,7 +66,7 @@ director_host=my.undercloud.local
 
 Note that the concat of ssh_cmd + director_host should be a "successful ssh access".
 
-##### Generate ssh.config file from inventory or hosts file
+#### Generate ssh.config file from inventory or hosts file
 
 Os-diff can use an ssh.config file for getting access to your TripleO/OSP environment.
 A command can help you to generate this ssh config file from your Ansible inventory (like tripleo-ansible-inventory.yaml file):
@@ -147,7 +147,7 @@ Then you can use this command to compare the values:
 os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 ```
 
-#### Pull configuration step
+### Pull configuration step
 
 Before running the Pull command you need to configure the SSH access to your environments (OpenStack and OCP).
 Edit os-diff.cfg and/or the ssh.config provided with this project and make sure you can ssh on your hosts 
@@ -280,7 +280,7 @@ You can compare:
   - do remote diff
   - configmap vs file
 
-##### Simple files diff
+#### Simple files diff
 
 Files comparison is the most simplest way to use os-diff:
 
@@ -288,7 +288,7 @@ Files comparison is the most simplest way to use os-diff:
 os-diff diff tripleo/keystone.conf ocp/keystone.conf
 ```
 
-##### Directories diff
+#### Directories diff
 
 Directory comparison and sub directory:
 
@@ -313,7 +313,7 @@ Source file path: /tmp/collect_crc_configs/nova/nova-api-0/etc/nova/nova.conf, d
 The log INFO/WARN and ERROR will be print to the console as well so you can have colored info regarding the current file processing.
 
 
-##### File Vs CRDs
+#### File Vs CRDs
 
 For file comparison with a CRD, you have to provide the --crd option.
 The name of the service might be needed if the service is describe in the config.yaml previoulsy configured, with a config mapping:
@@ -342,16 +342,43 @@ spec:
         edpm_ovn_bridge: br-int
 ```
 
+#### Diff from a running container or pod
 
+To be fixed...
 
+#### Diff from remote
 
-### Examples:
+For remote diff, you need to provide the --remote option in the CLI and then provide a remote command which will be used by the tool to get the config and perform the diff:
+
+Note that this option will be simplified in the future.
+
+```
+CMD2="ssh -F ssh.config standalone podman exec ff2d8edc25b6"
+os-diff diff examples/glance/glance-api.conf /etc/glance/glance-api.conf --file2-cmd "$CMD2" --remote
+```
+
+#### Diff from a configmap
+
+Os-diff can query the Openshift configmap in order to perform diff between a provided file and a config file stored in the configmap:
+
+```
+os-diff cfgmap-diff --configmap keystone-config-data --config /tmp/collect_tripleo_configs/keystone/etc/keystone
+
+# From a file:
+os-diff cfgmap-diff --configmap keystone-config-data.yaml --config /tmp/collect_tripleo_configs/keystone/etc/keystone
+
+# Or from a remote container:
+CMD1="ssh -F ssh.config standalone podman exec a6e1ca049eee"
+os-diff cfgmap-diff --configmap keystone-config-data --config /etc/keystone --remote --remode-cmd $CMD
+```
+
+## Examples:
 
 diff command compares file to file only and ouput a diff with color on the console.
 Example for YAML file:
 
 ```diff
-./os-diff diff tests/podman/key.yaml tests/ocp/key.yaml
+os-diff diff tests/podman/key.yaml tests/ocp/key.yaml
 Source file path: tests/podman/key.yaml, difference with: tests/ocp/key.yaml
 @@ line: 8
 +    pod_name: foo
@@ -420,7 +447,7 @@ spec:
 Run service command:
 
 ```service
-./os-diff cdiff -s glance -o examples/glance/glance.patch -c /tmp/glance.conf
+./os-diff cdiff /tmp/glance.conf  examples/glance/glance.patch --crd
 Source file path: examples/glance/glance.patch, difference with: /tmp/glance.conf
 -enabled_backends=default_backend:rbd
 -[glance_store]
@@ -432,52 +459,6 @@ Source file path: examples/glance/glance.patch, difference with: /tmp/glance.con
 -store_description=Ceph glance store backend.
 ```
 
-Run comparison against the deployed pod:
-
-```service
-./os-diff cdiff -s glance -o examples/glance/glance.patch -c /etc/glance/glance-api.conf \
---frompod -p glance-external-api-678c6c79d7-24t7t
-
-Source file path: examples/glance/glance.patch, difference with: /etc/glance/glance-api.conf
-[DEFAULT]
--enabled_backends=default_backend:rbd
-[glance_store]
--default_backend=default_backend
--[default_backend]
--rbd_store_ceph_conf=/etc/ceph/ceph.conf
--rbd_store_user=openstack
--rbd_store_pool=images
--store_description=Ceph glance store backend.
-```
-
-### Add service
-
-If you want to add a new OpenStack service to this tool follow those instructions:
-
-* Convert your OpenShift configmap to a GO struct with:
-https://zhwt.github.io/yaml-to-go/
-* Create a <service-name>.go file into pkg/servicecfg/
-* Paste your generated structure and the following code:
-```
-package servicecfg
-
-import (
-	"io/ioutil"
-	"strings"
-
-	"gopkg.in/yaml.v2"
-)
-
-type YourServiceName struct {
-	Spec struct {
-		YourServiceName struct {
-      Template: {
-        CustomServiceConfig string `yaml:"customServiceConfig"`
-      }
-    }
-  }
-}
-```
 ### Asciinema demo
 
 https://asciinema.org/a/618124
