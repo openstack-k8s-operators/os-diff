@@ -12,7 +12,7 @@ OpenStack to OpenStack on OpenShift migration.
 
 #### Setup Ssh access
 
-In order to allow Os-diff to connect to your clouds and pull files from the services you describe in the `config.yaml`file you need to properly set the option in the `os-diff.cfg`:
+In order to allow os-diff to connect to your clouds and pull files from the services you describe in the `config.yaml` file you need to properly set the option in the `os-diff.cfg`:
 
 ```
 [Default]
@@ -37,7 +37,7 @@ ssh_cmd=""
 
 ```
 
-The `ssh_cmd` will be used by os-diff to access via ssh to your TripleO Undercloud/Director host or the host where your cloud is accessible and the podman/docker binary is installed and allowed to interract with the running containers.
+The `ssh_cmd` will be used by os-diff to access your TripleO Undercloud/Director host via SSH, or the host where your cloud is accessible and the podman/docker binary is installed and allowed to interract with the running containers.
 This option could have different form:
 
 ```
@@ -50,7 +50,7 @@ ssh_cmd=ssh -F ssh.config
 director_host=standalone
 ```
 
-or without a ssh config file:
+or without an SSH config file:
 
 ```
 ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local
@@ -64,18 +64,18 @@ ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@
 director_host=my.undercloud.local
 ```
 
-Note that the concat of ssh_cmd + director_host should be a "successful ssh access".
+Note that the result of ssh_cmd + director_host should be a "successful ssh access".
 
 #### Generate ssh.config file from inventory or hosts file
 
-Os-diff can use an ssh.config file for getting access to your TripleO/OSP environment.
-A command can help you to generate this ssh config file from your Ansible inventory (like tripleo-ansible-inventory.yaml file):
+os-diff can use an ssh.config file for getting access to your TripleO/OSP environment.
+A command can help you to generate this SSH config file from your Ansible inventory (like tripleo-ansible-inventory.yaml file):
 
 ```
 os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
 ```
 
-The ssh.config file will looks like this (for a Standalone deployment):
+The ssh.config file will look like this (for a Standalone deployment):
 
 ```
 Host standalone
@@ -91,7 +91,7 @@ Host undercloud
   UserKnownHostsFile /dev/null
 ```
 
-Note: You will have to set the IdentityFile key in the file in order to get a fully working acces:
+Note: You will have to set the IdentityFile key in the file in order to get full working acces:
 
 ```
 Host standalone
@@ -111,10 +111,10 @@ Host undercloud
 
 #### Non-standard services settings
 
-It's important to configure correctly a ssh config file or equivalent for non standard services such as OVS.
-The ovs_external_ids is not a service which runs in a container and the ovs data are stored on each hosts of our cloud: controller_1/controller_2/...
+It's important to correctly configure an SSH config file or equivalent for non standard services such as OVS.
+The ovs_external_ids is not a service which runs in a container and the ovs data is stored on each host of our cloud: controller_1/controller_2/...
 
-The hosts key in the config.yaml will allow os-diff to loop and get for all hosts specified the output of the command or the file or the data that you need to pull from our deployment in order to compare it later:
+The hosts key in the config.yaml will allow os-diff to loop over all hosts specified the output of the command, or the file or data that you need to pull from our deployment in order to compare it later:
 
 ```
     ovs_external_ids:
@@ -124,10 +124,10 @@ The hosts key in the config.yaml will allow os-diff to loop and get for all host
             - standalone
 ```
 
-The `service_command` is the command which provides the required informations. It could a simple cat from a config file.
-`cat_output` should be set to true if you want os-diff to get the output of the command and stored the output in a file specified by the key `path`
+The `service_command` is the command which provides the required information. It could be a simple cat from a config file.
+`cat_output` should be set to true if you want os-diff to get the output of the command and store the output in a file specified by the key `path`
 
-Then you can provide a mapping between, in this case the EDPM CRD and the ovs-vsctl output with `config_mapping`
+Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vsctl output with `config_mapping`
 
 ```
         service_command: 'ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F '': '' ''{ print $2; }'''
@@ -150,7 +150,7 @@ os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 ### Pull configuration step
 
 Before running the Pull command you need to configure the SSH access to your environments (OpenStack and OCP).
-Edit os-diff.cfg and/or the ssh.config provided with this project and make sure you can ssh on your hosts 
+Edit os-diff.cfg and/or the ssh.config provided with this project and make sure you can SSH to your hosts 
 without password or host key verification, refer to the section below for more informations.
 
 When everything is setup correctly you can tweak the config.yaml file at the root of the project which will contain the description of the services you want to extract configuration from:
@@ -213,7 +213,7 @@ services:
       ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
 ```
 
-Note that `ovs_external_ids`is a non-standard service. This service is not an Openstack services executed in a container, so the description and the behavior is different.
+Note that `ovs_external_ids`is a non-standard service. This service is not an Openstack service executed in a container, so the description and the behavior is different.
 You can refer to the section bellow for the non-standard configuration.
 OVS is an example, but you can simply add whatever your want to check on all your nodes.
 
@@ -270,7 +270,7 @@ Note: The CLI arguments take precedence on the configuration file values.
 
 #### Compare configuration files steps
 
-Os-diff provides multiple ways to compare files and directories.
+os-diff provides multiple ways to compare files and directories.
 You can compare:
   - file vs file
   - directory vs directory (and sub directories)
@@ -280,15 +280,15 @@ You can compare:
   - do remote diff
   - configmap vs file
 
-#### Simple files diff
+#### Simple file diff
 
-Files comparison is the most simplest way to use os-diff:
+File comparison is the simplest way to use os-diff:
 
 ```
 os-diff diff tripleo/keystone.conf ocp/keystone.conf
 ```
 
-#### Directories diff
+#### Directory diff
 
 Directory comparison and sub directory:
 
@@ -296,7 +296,7 @@ Directory comparison and sub directory:
 os-diff diff tripleo ocp
 ```
 
-A results file is written at the root of this project `results.log` and a *.diff file is created for each
+A results file is written at the root of this project, `results.log`, and a *.diff file is created for each
 file where a difference has been detected
 
 ```diff
@@ -316,7 +316,7 @@ The log INFO/WARN and ERROR will be print to the console as well so you can have
 #### File Vs CRDs
 
 For file comparison with a CRD, you have to provide the --crd option.
-The name of the service might be needed if the service is describe in the config.yaml previoulsy configured, with a config mapping:
+The name of the service might be needed if the service is described in the config.yaml previously configured, with a config mapping:
 
 ```
 os-diff diff  examples/glance/glance.conf examples/glance/glance.patch --crd
@@ -325,7 +325,7 @@ os-diff diff  examples/glance/glance.conf examples/glance/glance.patch --crd
 os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 ```
 
-Where the edpm.crd may looks like this:
+Where the edpm.crd may look like this:
 
 ```
 apiVersion: dataplane.openstack.org/v1beta1
@@ -359,7 +359,7 @@ os-diff diff examples/glance/glance-api.conf /etc/glance/glance-api.conf --file2
 
 #### Diff from a configmap
 
-Os-diff can query the Openshift configmap in order to perform diff between a provided file and a config file stored in the configmap:
+os-diff can query the OpenShift configmap in order to perform diff between a provided file and a config file stored in the configmap:
 
 ```
 os-diff cfgmap-diff --configmap keystone-config-data --config /tmp/collect_tripleo_configs/keystone/etc/keystone
@@ -417,10 +417,10 @@ Source file path: /tmp/collect_ocp_configs/keystone/etc/keystone/keystone.conf, 
 
 ### OpenShift Pod config comparison
 
-When you prepare the adoption of your TripleO cloud to your OpenShift cluster, you might want to compare and verify if the config described in your OpenShift config desc file has no difference with your Tripleo service config or even, want to verify that after patching the OpenShift config, the service is correctly configured.
+When you prepare the adoption of your TripleO cloud to your OpenShift cluster, you might want to compare and verify if the config described in your OpenShift config desc file has no difference with your TripleO service config or even, want to verify that after patching the OpenShift config, the service is correctly configured.
 
 The service command allow you to compare YAML OpenShift config patch with OpenStack Ini configuration file from your services.
-You can also query OpenShift pods to check if the configuration are correct.
+You can also query OpenShift pods to check if the configuration is correct.
 
 Example:
 
@@ -461,7 +461,7 @@ Source file path: examples/glance/glance.patch, difference with: /tmp/glance.con
 
 ## CRD Generation from configuration file
 
-Os-diff can generate CRD file from a given configuration file with the following command:
+os-diff can generate CRD file from a given configuration file with the following command:
 
 ```
 os-diff gen --service glance --config my-conf.ini --output glance.patch
@@ -469,11 +469,10 @@ YAML file generated:  glance.patch
 ```
 
 Note that the `service` (Glance in this example), must be implemented in the servicecfg package in os-diff.
-Follow the instruction to add new services in the documentation
 
 ### Add service
 
-If you want to add a new OpenStack service to this tool follow those instructions:
+If you want to add a new OpenStack service to this tool follow these instructions:
 
 * Convert your OpenShift configmap to a GO struct with:
 https://zhwt.github.io/yaml-to-go/
