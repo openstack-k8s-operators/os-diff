@@ -76,6 +76,9 @@ CMD1=oc exec -t neutron-cd94d8ccb-vq2gk -c neutron-api --
 		path1 := args[0]
 		path2 := args[1]
 		configPath := CheckFilesPresence(serviceCfgFile)
+		// Fix this, in the case where the --frompod or --frompodman is used, the service should be provided but not the podname
+		// because we already have the podname associated to the service.
+
 		if crd {
 			if frompod {
 				if podname == "" {
@@ -130,6 +133,7 @@ func init() {
 	diffCmd.Flags().BoolVar(&crd, "crd", false, "Compare a CRDs with a config file.")
 	diffCmd.Flags().StringVarP(&serviceCfgFile, "service-config", "f", "config.yaml", "Path for the Yaml config where the services are described, default is config.yaml located in /etc/os-diff/config.yaml.")
 	diffCmd.Flags().StringVarP(&service, "service", "s", "", "Service to compare with a crd, could be one of the services: cinder, glance, ovs_external_ids, edpm... Should be used with --crd option..")
+	diffCmd.Flags().StringVarP(&podname, "podname", "p", "", "Container or podname from where to get the config file.")
 	diffCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
 	diffCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from OpenStack podman container.")
 	diffCmd.Flags().StringSliceVar(&iniFilters, "filters", []string{}, "Filter for ini sections: --filters default,connection ..")
