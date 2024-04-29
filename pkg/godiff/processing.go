@@ -214,7 +214,9 @@ func (p *GoDiffDataStruct) Process(dir1 string, dir2 string) error {
 					// Compare the two files
 					if !common.StringInSlice(path, p.unmatchFile) {
 						p.unmatchFile = append(p.unmatchFile, path)
-						report, err := CompareFiles(path, path2, false, true)
+						// Set empty iniFilers
+						inifilters := []string{}
+						report, err := CompareFiles(path, path2, false, true, inifilters)
 						if err != nil {
 							return err
 						}

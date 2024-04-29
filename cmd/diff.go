@@ -38,6 +38,7 @@ var service string
 var frompod bool
 var frompodman bool
 var podname string
+var iniFilters []string
 
 var diffCmd = &cobra.Command{
 	Use:   "diff [path1] [path2]",
@@ -114,7 +115,7 @@ CMD1=oc exec -t neutron-cd94d8ccb-vq2gk -c neutron-api --
 					return
 				}
 			} else {
-				godiff.CompareFiles(path1, path2, true, debug)
+				godiff.CompareFiles(path1, path2, true, debug, iniFilters)
 			}
 		}
 	},
@@ -131,5 +132,6 @@ func init() {
 	diffCmd.Flags().StringVarP(&service, "service", "s", "", "Service to compare with a crd, could be one of the services: cinder, glance, ovs_external_ids, edpm... Should be used with --crd option..")
 	diffCmd.Flags().BoolVar(&frompod, "frompod", false, "Get config file directly from OpenShift service Pod.")
 	diffCmd.Flags().BoolVar(&frompodman, "frompodman", false, "Get config file directly from OpenStack podman container.")
+	diffCmd.Flags().StringSliceVar(&iniFilters, "filters", []string{}, "Filter for ini sections: --filters default,connection ..")
 	rootCmd.AddCommand(diffCmd)
 }

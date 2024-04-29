@@ -32,7 +32,9 @@ import (
 
 func CompareIniConfig(rawdata1 []byte, rawdata2 []byte, ocpConfig string, serviceConfig string) ([]string, error) {
 
-	report, err := godiff.CompareIni(rawdata1, rawdata2, ocpConfig, serviceConfig, false)
+	// Set empty iniFilters
+	iniFilters := []string{}
+	report, err := godiff.CompareIni(rawdata1, rawdata2, ocpConfig, serviceConfig, false, iniFilters)
 	if err != nil {
 		panic(err)
 	}

@@ -19,6 +19,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -117,6 +118,14 @@ func StringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func ToLowerSlice(data []string) []string {
+	var lowerData []string
+	for _, d := range data {
+		lowerData = append(lowerData, strings.ToLower(d))
+	}
+	return lowerData
 }
 
 func SliceIndex(element string, data []string) int {
@@ -257,4 +266,42 @@ func FormatShellCommand(input string) []string {
 		tokens = append(tokens, currentToken)
 	}
 	return tokens
+}
+
+func BuildFullSshCmd(sshCmd string, host string) (string, string, error) {
+	sshCmd = strings.Join(strings.Fields(sshCmd), " ")
+	atIndex := strings.LastIndex(sshCmd, "@")
+	if atIndex == -1 {
+		fIndex := strings.Index(sshCmd, "-F")
+		if fIndex != -1 {
+			fParts := strings.SplitN(sshCmd[fIndex:], " ", 4)
+			if len(fParts) < 3 {
+				return sshCmd + " " + host, host, nil
+			} else if len(fParts) == 3 && (host == "" || fParts[2] == host) {
+				fmt.Printf("director_host option is already set in ssh_cmd or empty, using ssh_cmd as full command: %s and: %s as director host...", sshCmd, fParts[2])
+				return sshCmd, fParts[2], nil
+			} else if len(fParts) == 3 && fParts[2] != host {
+				fmt.Printf("Error: The host in the ssh_cmd: %s does not match the director_host: %s\n", fParts[2], host)
+				return "", "", fmt.Errorf("error: The host in the ssh_cmd: %s does not match the director_host: %s", fParts[2], host)
+			}
+			if len(fParts) > 3 {
+				fmt.Println("Error: Too many arguments after -F option")
+				return "", "", errors.New("error: Too many arguments after -F option")
+			}
+		}
+		return sshCmd + " " + host, host, nil
+	} else if atIndex == len(sshCmd)-1 {
+		return sshCmd + host, host, nil
+	} else {
+		cmdHost := sshCmd[atIndex+1:]
+		if host == "" {
+			fmt.Printf("director_host option is already set in ssh_cmd or empty, using ssh_cmd as full command: %s and: %s as director host...", sshCmd, cmdHost)
+			return sshCmd, cmdHost, nil
+		}
+		if cmdHost != host {
+			fmt.Printf("Error: The host in the sshCmd %s does not match the DirectorHost %s\n", cmdHost, host)
+			return "", "", fmt.Errorf("error: The host in the sshCmd %s does not match the directorHost %s", cmdHost, host)
+		}
+		return sshCmd, cmdHost, nil
+	}
 }

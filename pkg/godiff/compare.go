@@ -82,7 +82,7 @@ func CompareJSONFiles(origin []byte, dest []byte) ([]string, error) {
 	return report, nil
 }
 
-func CompareFiles(origin string, dest string, print bool, verbose bool) ([]string, error) {
+func CompareFiles(origin string, dest string, print bool, verbose bool, iniFilters []string) ([]string, error) {
 	var report []string
 	if print {
 		log.SetOutput(ioutil.Discard)
@@ -102,7 +102,7 @@ func CompareFiles(origin string, dest string, print bool, verbose bool) ([]strin
 	// Detect type
 	if common.IsIni(orgContent) && common.IsIni(destContent) {
 		log.Info("Files detected as Ini files, start to process contents")
-		report, err = CompareIni(orgContent, destContent, origin, dest, verbose)
+		report, err = CompareIni(orgContent, destContent, origin, dest, verbose, iniFilters)
 		// if error occur, try to make a basic diff
 		if err != nil {
 			log.Warn(
@@ -161,7 +161,9 @@ func CompareFilesFromRemote(origin string, dest string, originRemoteCmd string, 
 		return err
 	}
 
-	report, err := CompareIni(originConfigContent, destConfigContent, origin, dest, verbose)
+	// Set empty iniFilters
+	inifilters := []string{}
+	report, err := CompareIni(originConfigContent, destConfigContent, origin, dest, verbose, inifilters)
 	if err != nil {
 		return err
 	}
