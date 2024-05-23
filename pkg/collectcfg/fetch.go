@@ -62,10 +62,10 @@ func PullConfigs(configDir string, tripleo bool, sshCmd string, undercloud strin
 	for service := range config.Services {
 		if _, ok := filterMap[service]; ok || len(filters) == 0 {
 			if tripleo && (config.Services[service].PodmanName == "" || config.Services[service].PodmanId == "") {
-				PullConfigFromHosts(service, configDir, sshCmd, undercloud)
-			} else {
 				fullCmd := sshCmd + " " + undercloud
 				PullConfig(service, tripleo, configDir, fullCmd)
+			} else {
+				PullConfigFromHosts(service, configDir, sshCmd, undercloud)
 			}
 		}
 	}
