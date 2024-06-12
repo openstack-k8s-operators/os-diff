@@ -103,7 +103,6 @@ type OpenStackDataPlaneNodeSet struct {
 					EdpmOvnBridgeMappings                      []string `yaml:"edpm_ovn_bridge_mappings"`
 					EdpmOvnBridge                              string   `yaml:"edpm_ovn_bridge"`
 					EdpmOvnEncapType                           string   `yaml:"edpm_ovn_encap_type"`
-					OvnMatchNorthdVersion                      bool     `yaml:"ovn_match_northd_version"`
 					OvnMonitorAll                              bool     `yaml:"ovn_monitor_all"`
 					EdpmOvnRemoteProbeInterval                 int      `yaml:"edpm_ovn_remote_probe_interval"`
 					EdpmOvnOfctrlWaitBeforeClear               int      `yaml:"edpm_ovn_ofctrl_wait_before_clear"`
