@@ -136,7 +136,6 @@ Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vs
             ovn-bridge: edpm_ovn_bridge
             ovn-bridge-mappings: edpm_ovn_bridge_mappings
             ovn-encap-type: edpm_ovn_encap_type
-            ovn-match-northd-version: ovn_match_northd_version
             ovn-monitor-all: ovn_monitor_all
             ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
             ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
@@ -207,7 +206,6 @@ services:
       ovn-bridge-mappings: edpm_ovn_bridge_mappings
       ovn-bridge: edpm_ovn_bridge
       ovn-encap-type: edpm_ovn_encap_type
-      ovn-match-northd-version: ovn_match_northd_version
       ovn-monitor-all: ovn_monitor_all
       ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
       ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
