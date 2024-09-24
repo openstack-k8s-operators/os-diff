@@ -64,7 +64,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 			}
 			// OCP Settings
 			localOCPDir := config.Openshift.OcpLocalConfigPath
-			err := collectcfg.FetchConfigFromEnv(configPath, localOCPDir, "", false, config.Openshift.Connection, "", "", filters)
+			err := collectcfg.FetchConfigFromEnv(configPath, localOCPDir, "", false, config.Openshift.Connection, "", "", filters, "")
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return
@@ -73,6 +73,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 			// TRIPLEO Settings:
 			sshCmd := config.Tripleo.SshCmd
 			fullCmd, directorHost, err := common.BuildFullSshCmd(sshCmd, config.Tripleo.DirectorHost)
+			collectcfg.Sudo = config.Tripleo.Sudo
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -82,6 +83,8 @@ This command will populate the config.yaml file with the podman and image Ids an
 			if !common.TestSshConnection(fullCmd) {
 				fmt.Println("Please check your SSH configuration: " + fullCmd)
 				return
+			} else {
+				fmt.Println("SSH connection successful !")
 			}
 			if update || updateOnly {
 				collectcfg.SetTripleODataEnv(configPath, fullCmd, filters, true)
@@ -89,7 +92,7 @@ This command will populate the config.yaml file with the podman and image Ids an
 					return
 				}
 			}
-			err = collectcfg.FetchConfigFromEnv(configPath, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, sshCmd, directorHost, filters)
+			err = collectcfg.FetchConfigFromEnv(configPath, localConfigDir, remoteConfigDir, true, config.Tripleo.Connection, fullCmd, directorHost, filters, sshCmd)
 			if err != nil {
 				fmt.Println("Error while collecting config: ", err)
 				return

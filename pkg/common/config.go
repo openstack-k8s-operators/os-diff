@@ -36,6 +36,7 @@ type ODConfig struct {
 		SshCmd           string `ini:"ssh_cmd"`
 		DirectorHost     string `ini:"director_host"`
 		ContainerEngine  string `ini:"container_engine"`
+		Sudo             bool   `ini:"sudo"`
 		Connection       string `ini:"connection"`
 		RemoteConfigPath string `ini:"remote_config_path"`
 		LocalConfigPath  string `ini:"local_config_path"`
