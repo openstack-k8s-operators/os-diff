@@ -220,7 +220,7 @@ func SyncConfigDir(localPath string, remotePath string, sshCmd string, underclou
 		return err
 	}
 	if undercloud != "" {
-		cmd = "rsync -a -e '" + sshCmd + "' :" + remotePath + " " + localPath
+		cmd = "rsync -a -e '" + sshCmd + " " + undercloud + "' :" + remotePath + " " + localPath
 		common.ExecCmd(cmd)
 	} else {
 		hosts := GetListHosts(undercloud)
