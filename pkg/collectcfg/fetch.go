@@ -252,7 +252,7 @@ func GetListHosts(undercloud string) []string {
 
 func CleanUp(remotePath string, sshCmd string) error {
 	if remotePath == "" || remotePath == "/" {
-		return fmt.Errorf("Clean up Error - Empty or wrong path: " + remotePath + ". Please make sure you provided a correct path.")
+		return fmt.Errorf("Clean up Error - Empty or wrong path: %s. Please make sure you provided a correct path.", remotePath)
 	}
 	if Sudo {
 		sshCmd = sshCmd + " sudo "
