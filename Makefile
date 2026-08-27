@@ -3,7 +3,7 @@ BINARY_NAME=os-diff
 
 # build
 build:
-	CGO_ENABLED=1 go build -o ${BINARY_NAME} main.go
+	CGO_ENABLED=0 go build -o ${BINARY_NAME} .
 
 # run
 run: build
