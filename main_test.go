@@ -17,18 +17,28 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"os/exec"
+	"strings"
+	"testing"
 )
 
-func retirementMessage() string {
-	return `os-diff is retired and is no longer supported in Red Hat OpenStack Services on OpenShift 18.
-Configuration comparison should use standard tools such as diff(1).
-See the RHOSO 18 release notes and adoption documentation for guidance.
-`
+func TestRetirementMessage(t *testing.T) {
+	msg := retirementMessage()
+	if !strings.Contains(msg, "retired") || !strings.Contains(msg, "no longer supported") {
+		t.Fatalf("unexpected message: %q", msg)
+	}
 }
 
-func main() {
-	fmt.Fprint(os.Stderr, retirementMessage())
-	os.Exit(1)
+func TestMainExitsOne(t *testing.T) {
+	if os.Getenv("OS_DIFF_TEST_MAIN") == "1" {
+		main()
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestMainExitsOne")
+	cmd.Env = append(os.Environ(), "OS_DIFF_TEST_MAIN=1")
+	err := cmd.Run()
+	if ee, ok := err.(*exec.ExitError); !ok || ee.ExitCode() != 1 {
+		t.Fatalf("expected exit 1, got %v", err)
+	}
 }
